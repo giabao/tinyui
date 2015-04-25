@@ -140,3 +140,9 @@ class SomeView extends Sprite {
      
      Ex, in attribute `font="'Tahoma'"` has value 'Tahoma' - which is a String const.
         If you omit the (') chars, then haxe compiler will report error that identifier Tahoma is not exist!
+
+### Licence
+This software is licensed under the Apache 2 license:
+http://www.apache.org/licenses/LICENSE-2.0
+
+Copyright 2015 Sân ?ình (http://sandinh.com)
