@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <UI><!--name of root elem can be any-->
   <!--Here, Bitmap, Assets, CENTER is imported in SomeView.hx(the macro building class)-->
   <!--Name of 1-level xml node (here is Bitmap) is the haxe class name. It must be a DisplayObject sub-class.

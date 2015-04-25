@@ -12,7 +12,6 @@ class Main extends Sprite {
 	public function new() 	{
 		super();
         var view = new SomeView();
-        view.initUI();
 		addChild(view);
 	}
 }

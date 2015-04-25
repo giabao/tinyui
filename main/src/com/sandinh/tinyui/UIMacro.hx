@@ -84,8 +84,9 @@ class UIMacro {
             }
             
             if (hasVar) {
-                var tpe: DefType = switch(Context.getType(className)) {
+                var tpe: BaseType = switch(Context.getType(className)) {
                     case TType(t, _): t.get();
+                    case TInst(t, _): t.get();
                     case _: Context.error('Can not find type ${node.nodeName}', xmlPos);
                 }
                 
@@ -163,14 +164,12 @@ class UIMacro {
             '   $varName.$parentVar = $childVarName;' :
             '   $varName.$parentFun($childVarName);') +
             "}";
-            
         }
         
         return code;
     }
 
     private function genInitCode(code: String): Field {
-        Sys.println(code);
         //generate dummy function to extract expressions
         var dummy : Expr = Context.parse('function () { $code }', xmlPos);
 
@@ -236,7 +235,7 @@ class UIMacro {
         buf.add(CodeGenEnd);
         buf.addSub(content, codeGenIdx);
         
-        //5. Save file
+        //6. Save file
         File.saveContent(saveFile + ".hx", buf.toString());
     }
     
