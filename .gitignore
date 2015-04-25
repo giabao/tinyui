@@ -1,0 +1,4 @@
+example/bin/
+.idea/sbt.xml
+.idea/workspace.xml
+example/ui-codegen/
