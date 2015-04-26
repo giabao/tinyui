@@ -223,8 +223,6 @@ class UIMacro {
     }
 
     private function genInitCode(code: String): Field {
-        //Context.warning(code, Context.currentPos());
-        
         //get initUI arguments, ex: <UI function="w: Int, h: Int" ..>
         var args: String = xml.get("function");
         if (args == null) args = "";
@@ -232,9 +230,9 @@ class UIMacro {
         //generate dummy function to extract expressions
         var dummy : Expr = Context.parse('function ($args) { $code }', xmlPos);
 
-        //extract expressions
-        var eblock : Expr = switch(dummy.expr){
-            case EFunction(_,f) : f.expr;
+        //extract function
+        var fun : Function = switch(dummy.expr){
+            case EFunction(_,f) : f;
             default: null;
         }
         
@@ -245,8 +243,8 @@ class UIMacro {
             kind   : FFun({
                 ret    : null,
                 params : [],
-                expr   : eblock,
-                args   : [],
+                expr   : fun.expr,
+                args   : fun.args,
             })
         };
     }
