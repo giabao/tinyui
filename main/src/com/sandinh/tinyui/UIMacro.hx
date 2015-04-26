@@ -11,6 +11,7 @@ import sys.FileSystem;
 
 using Lambda;
 using StringTools;
+using UIMacro.IteratorToos;
 
 //TODO suport debuging in generated code with Position info
 class UIMacro {
@@ -147,35 +148,75 @@ class UIMacro {
         //this is used to declare local variable name when xml node has no `var` attribute
         var localVarNum = new Map<String, Int>();
         for (child in node.elements()) {
-            var className: String = child.nodeName;
-            
-            var parentVar: String = child.get("var");
-            var parentFun: String = child.get("function");
-            if (parentVar == null && parentFun == null) {
-                Context.warning('child node of type $className in node ${node.nodeName} has NO `var` or `function` attribute', xmlPos);
-                continue;
+            switch (child.nodeName) {
+                //ex: <Sprite><var x="1+2" y="3" /></Sprite>
+                //we will ignore children nodes of `child`
+                case "var":
+                    code += attr2Haxe(child, varName);
+                
+                case "function":
+                    var funName: String = child.get("function");
+                    if (funName == null) {
+                        //then each attribute will be a function name, with only one argument - that is the value of attribute.
+                        //ex: <Sprite><function addChild="new Bitmap(Assets.getBitmapData('/some_img.png'))" /></Sprite>
+                        //we will ignore children nodes of `child`
+                        for (attr in child.attributes()) {
+                            var value = child.get(attr);
+                            code += '$varName.$attr($value);';
+                        }
+                    } else {
+                        //then each attribute value will be used as an argument for function `funName`
+                        //attribute name is sorted before pass to the function.
+                        //Note: we can NOT use declared order of attributes because Xml.attributes() will not preserved the order.
+                        //ex: see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/fl/core/UIComponent.html#setStyle%28%29
+                        //<Label><function function="setStyle" arg1="'textFormat'" arg2="new TextFormat('Tahoma', 16, 0xFFFFFF, true)" /></Label>
+                        
+                        //TODO support declare arguments as sub-node, ex:
+                        //<Label><function function="setStyle">
+                        //  <String new="'textFormat'" />
+                        //  <TextFormat font="'Tahoma'" size="16" color="0xFFFFFF" bold="true" />
+                        //</function></Label>
+                        var args: Array<String> = child.attributes().array().filter(function(a) return a != "function");
+                        args.sort(function(a, b) return a == b? 0 : (a < b? -1 : 1));
+                        var s = args.map(child.get).join(",");
+                        code += '$varName.$funName($s);';
+                    }
+                    
+                case className:
+                    var className: String = child.nodeName;
+                    
+                    //ex: <TextField><TextFormat var="defaultTextFormat" size="11" /><var text="'sandinh.com'" /></TextField>
+                    var parentVar: String = child.get("var");
+                    
+                    //ex: <TextField text="'hello'"><TextFormat function="setTextFormat" size="11" /></TextField>
+                    var parentFun: String = child.get("function");
+                    if (parentVar == null && parentFun == null) {
+                        Context.warning('child node of type $className in node ${node.nodeName} has NO `var` or `function` attribute', xmlPos);
+                        continue;
+                    }
+                    
+                    //ex: <Bitmap new="new Bitmap(Assets.getBitmapData('/some_img.png'))" />
+                    var newExpr: String = child.get("new");
+                    if (newExpr == null) {
+                        newExpr = 'new $className()';
+                    }
+                    
+                    var i = localVarNum.get(className);
+                    if (i == null) {
+                        i = 0;
+                    }
+                    localVarNum.set(className, ++i);
+                    var childVarName = '__ui$className$i';
+                    //init a new className in a new haxe scope
+                    code +=
+                    "{" +
+                    '   var $childVarName: $className = $newExpr;' +
+                    node2Haxe(child, childVarName) +
+                        (parentVar != null?
+                    '   $varName.$parentVar = $childVarName;' :
+                    '   $varName.$parentFun($childVarName);') +
+                    "}";
             }
-            
-            var newExpr: String = child.get("new");
-            if (newExpr == null) {
-                newExpr = 'new $className()';
-            }
-            
-            var i = localVarNum.get(className);
-            if (i == null) {
-                i = 0;
-            }
-            localVarNum.set(className, ++i);
-            var childVarName = '__ui$className$i';
-            //init a new className in a new haxe scope
-            code +=
-            "{" +
-            '   var $childVarName: $className = $newExpr;' +
-            node2Haxe(child, childVarName) +
-                (parentVar != null?
-            '   $varName.$parentVar = $childVarName;' :
-            '   $varName.$parentFun($childVarName);') +
-            "}";
         }
         
         return code;
@@ -262,3 +303,12 @@ class UIMacro {
 }
 
 #end
+
+class IteratorToos {
+    public static function array<A>( it : Iterator<A> ) : Array<A> {
+		var a = new Array<A>();
+		while(it.hasNext())
+			a.push(it.next());
+		return a;
+	}
+}
