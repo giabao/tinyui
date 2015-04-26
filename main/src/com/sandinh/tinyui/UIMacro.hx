@@ -123,11 +123,18 @@ class UIMacro {
     private function attr2Haxe(node: Xml, varName: String): String {
         var code = "";
         for (attr in node.attributes()) {
-            if (specialAttributes.has(attr)) {
+            if (specialAttributes.has(attr) ) {
                 continue;
             }
             var value = node.get(attr);
-            code += '$varName.$attr = $value;';
+            if (attr.startsWith("var.")) {
+                var localVarName = attr.substr(4); //"var.".length == 4
+                //ex: <UI var.someVar:Float="Math.max(1+2, 4)"..>
+                //or: <UI var.someVar="1+2"..>
+                code += 'var $localVarName = $value;';
+            } else {
+                code += '$varName.$attr = $value;';
+            }
         }
         return code;
     }
@@ -176,9 +183,13 @@ class UIMacro {
 
     private function genInitCode(code: String): Field {
         //Context.warning(code, Context.currentPos());
+        
+        //get initUI arguments, ex: <UI function="w: Int, h: Int" ..>
+        var args: String = xml.get("function");
+        if (args == null) args = "";
 
         //generate dummy function to extract expressions
-        var dummy : Expr = Context.parse('function () { $code }', xmlPos);
+        var dummy : Expr = Context.parse('function ($args) { $code }', xmlPos);
 
         //extract expressions
         var eblock : Expr = switch(dummy.expr){
