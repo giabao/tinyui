@@ -40,16 +40,16 @@ class UIMacro {
     private var xml: Xml;
 
     function new(xmlFile: String) {
-        xmlPos = Context.makePosition({min:0, max:0, file:xmlFile});
         try {
             xml = Xml.parse(File.getContent(xmlFile)).firstElement();
         } catch(e: Dynamic) {
-            Context.error(e, xmlPos);
+            Context.error('Can NOT parse $xmlFile, $e', Context.currentPos());
         }
+        xmlPos = Context.makePosition({min:0, max:0, file:xmlFile});
     }
 
     /** See build(String) */
-    private function doBuild(): Array<Field> {
+    private function doBuild(): Array<Field> {        
         var fields: Array<Field> = [];
         //code for initUI() method
         //generate other fields by parsing xml file
@@ -227,6 +227,16 @@ class UIMacro {
         var args: String = xml.get("function");
         if (args == null) args = "";
 
+        var isOverride: Bool = Context.getLocalClass().get().superClass.t.get() //view class must alway extends something
+            .fields.get().exists(function(field: ClassField) return field.name == "initUI");
+            
+        if (isOverride) {
+            var argNames: String = args.split(",")
+                .map(function(s) return s.substr(0, s.indexOf(":")))
+                .join(",");
+            code = 'super.initUI($argNames); $code';
+        }
+        
         //generate dummy function to extract expressions
         var dummy : Expr = Context.parse('function ($args) { $code }', xmlPos);
 
@@ -239,7 +249,7 @@ class UIMacro {
         return {
             pos    : xmlPos,
             name   : "initUI",
-            access : [APublic], //TODO support asses, doc, meta?
+            access : isOverride? [AOverride, APublic] : [APublic],
             kind   : FFun({
                 ret    : null,
                 params : [],
