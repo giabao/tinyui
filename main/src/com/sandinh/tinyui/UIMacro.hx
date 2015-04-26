@@ -15,6 +15,7 @@ using StringTools;
 //TODO suport debuging in generated code with Position info
 class UIMacro {
     private static var genCodeDir: String = null;
+    private static var specialAttributes: Array<String> = ["new", "var", "function"];
     
     /** Set directory to save generated code to. Should be called in */
     macro public static function saveCodeTo(dir: String): Void {
@@ -65,7 +66,7 @@ class UIMacro {
      * This method also generate code for initUI() method.
      * @param fields MUST be prepared before call this function. */
     private function pushFieldsAndGetInitCode(fields: Array<Field>): String {
-        var code = "";
+        var code: String = attr2Haxe(xml, "this");
         //map from className to an auto-inc value
         //this is used to declare local variable name when xml node has no `var` attribute
         var localVarNum = new Map<String, Int>();
@@ -119,17 +120,21 @@ class UIMacro {
         return code;
     }
     
-    /** Generate haxe code that set properties for `varName` based on `node` */
-    private function node2Haxe(node: Xml, varName: String): String {
+    private function attr2Haxe(node: Xml, varName: String): String {
         var code = "";
-        
         for (attr in node.attributes()) {
-            if (attr == "var" || attr == "function" || attr == "new") {
+            if (specialAttributes.has(attr)) {
                 continue;
             }
             var value = node.get(attr);
             code += '$varName.$attr = $value;';
         }
+        return code;
+    }
+    
+    /** Generate haxe code that set properties for `varName` based on `node` */
+    private function node2Haxe(node: Xml, varName: String): String {
+        var code: String = attr2Haxe(node, varName);
         
         //map from className to an auto-inc value
         //this is used to declare local variable name when xml node has no `var` attribute
@@ -170,6 +175,8 @@ class UIMacro {
     }
 
     private function genInitCode(code: String): Field {
+        //Context.warning(code, Context.currentPos());
+
         //generate dummy function to extract expressions
         var dummy : Expr = Context.parse('function () { $code }', xmlPos);
 
