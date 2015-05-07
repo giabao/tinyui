@@ -3,8 +3,8 @@ import openfl.text.TextField;
 import openfl.text.TextFormat;
 import openfl.text.TextFormatAlign;
 
-@:build(TinyUI.build('ui/view9.xml'))
-class View9 extends Sprite {
+@:build(TinyUI.build('ui/09-function-node.xml'))
+class UI09FunctionNode extends Sprite {
 	//++++++++++ code gen by tinyui ++++++++++//
 	public function initUI() {
 		var __uiTextField1 = new flash.text.TextField();

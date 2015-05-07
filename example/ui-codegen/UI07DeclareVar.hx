@@ -1,8 +1,8 @@
 import openfl.display.Sprite;
 import openfl.text.TextField;
 
-@:build(TinyUI.build('ui/view7.xml'))
-class View7 extends Sprite {
+@:build(TinyUI.build('ui/07-declare-var.xml'))
+class UI07DeclareVar extends Sprite {
 	//++++++++++ code gen by tinyui ++++++++++//
 	public var txt : openfl.text.TextField;
 	public function initUI() {

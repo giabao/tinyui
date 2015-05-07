@@ -3,22 +3,22 @@ import openfl.display.Sprite;
 class Main extends Sprite {
     public function new() {
         super();
-        new View1();
-        new View2();
-        new View3();
-        new View4();
-        new View5();
-        new View6();
-        new View7();
-        new View8();
-        addChild(new View9());
+        new UI01Empty();
+        new UI02FieldAttr();
+        new UI03ThisNode();
+        new UI04LocalVar();
+        new UI05InitUIArgs();
+        new UI06ViewItem();
+        new UI07DeclareVar();
+        new UI08ItemFieldNode();
+        addChild(new UI09FunctionNode());
 
-        var v10 = new View10();
+        var v10 = new UI10NewExpression();
         addChildAt(v10, 0);
         v10.initUI();
 
-        new View11();
+        new UI11NestedItems();
 
-        addChild(new View12());
+        addChild(new UI12ForLoop());
     }
 }

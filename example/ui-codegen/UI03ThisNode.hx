@@ -1,11 +1,11 @@
 import openfl.display.Sprite;
 
-@:build(TinyUI.build('ui/view2.xml'))
-class View2 extends Sprite {
+@:build(TinyUI.build('ui/03-this-node.xml'))
+class UI03ThisNode extends Sprite {
 	//++++++++++ code gen by tinyui ++++++++++//
 	public function initUI() {
-		this.width = 100;
 		this.x = 1 + 2;
+		this.width = this.x + 97;
 	}
 	//---------- code gen by tinyui ----------//
 

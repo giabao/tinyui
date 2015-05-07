@@ -2,8 +2,8 @@ import openfl.display.Sprite;
 import openfl.display.Bitmap;
 import openfl.Assets;
 
-@:build(TinyUI.build('ui/view10.xml'))
-class View10 extends Sprite {
+@:build(TinyUI.build('ui/10-new-expression.xml'))
+class UI10NewExpression extends Sprite {
 	//++++++++++ code gen by tinyui ++++++++++//
 	public var img1 : openfl.display.Bitmap;
 	public function initUI() {

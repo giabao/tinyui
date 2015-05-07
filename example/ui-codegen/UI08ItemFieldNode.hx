@@ -1,8 +1,8 @@
 import openfl.display.Sprite;
 import openfl.text.TextField;
 
-@:build(TinyUI.build('ui/view8.xml'))
-class View8 extends Sprite {
+@:build(TinyUI.build('ui/08-item-field-node.xml'))
+class UI08ItemFieldNode extends Sprite {
 	//++++++++++ code gen by tinyui ++++++++++//
 	public function initUI() {
 		var __uiTextField1 = new flash.text.TextField();

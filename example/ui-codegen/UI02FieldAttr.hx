@@ -1,12 +1,11 @@
 import openfl.display.Sprite;
 
-@:build(TinyUI.build('ui/view4.xml'))
-class View4 extends Sprite {
+@:build(TinyUI.build('ui/02-field-attr.xml'))
+class UI02FieldAttr extends Sprite {
 	//++++++++++ code gen by tinyui ++++++++++//
 	public function initUI() {
-		var baz:Int = 3;
-		var foo = 1 + 2;
-		this.x = foo + baz;
+		this.width = 100;
+		this.x = 1 + 2;
 	}
 	//---------- code gen by tinyui ----------//
 
