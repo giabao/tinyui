@@ -51,6 +51,7 @@ class TinyUI {
     var xmlPos: Position;
     /** Used to store the buiding fields */
 	var buildingFields: Array<Field> = [];
+    var localVarNameGen = new LocalVarNameGen();
 
     function new(xmlPos: Position) {
         this.xmlPos = xmlPos;
@@ -148,8 +149,10 @@ class TinyUI {
      * @param ctx - see doc of NodeCtx enum */
 	function classNode2Haxe(node: Xml, varName: String, ctx: NodeCtx): String {
 		//1. process node's attributes
-		var code = attr2Haxe(node, varName);
-        var localVarNameGen = new LocalVarNameGen();
+		var code = "";
+        if (node.nodeName != "for") {
+            code += attr2Haxe(node, varName);
+        }
 		
 		//2. process node's elements
 		for (child in node.elements()) {
@@ -199,7 +202,18 @@ class TinyUI {
 					}
 					
 					code += '$varName.$fnName(' + args.join(",") + ");";
-				
+
+                case ["for", NodeCtx.ViewItem]:
+                    var attrs = child.attributes();
+                    var iterVar = attrs.next();
+                    if (attrs.hasNext()) {
+                        Context.warning("`for` node must has only one attribute", xmlPos);
+                    }
+                    var iter = child.get(iterVar);
+                    code += 'for ($iterVar in $iter) {';
+                    code += classNode2Haxe(child, varName, NodeCtx.ViewItem);
+                    code += '}';
+
 				//if `node` is root node (map to View class) then `child` is className of a View Item
                 //each View Item node has `var` attribute will be generated to a haxa field.
 				case [className, NodeCtx.ViewItem]:
