@@ -1,0 +1,2 @@
+<UI function="foo:Int, baz:Int" x="foo + baz">
+</UI>
