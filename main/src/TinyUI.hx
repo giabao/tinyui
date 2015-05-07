@@ -126,6 +126,18 @@ class TinyUI {
 		var i = s.indexOf(".");
 		return i == -1? null : Std.parseInt(s.substr(i + 1));
 	}
+    function getFnNodeArgs(node: Xml): Array<String> {
+        var args: Array<String> = node.attributes().array();
+        if (args.length > 1) {
+            for (a in args) {
+                if (dotOrder(a) == null) {
+                    Context.error('argument $a in a function.fnName node - which have >1 attributes - is not in format argName.order', xmlPos);
+                }
+            }
+            args.sort(function(a, b) return dotOrder(a) - dotOrder(b));
+        }
+        return args.map(node.get);
+    }
 	
     /** loop throught xml node recursively and generate haxe code for initUI function.
      * This method also push Fields to `buildingFields` if ctx is ViewItem and the ViewItem node has `var` attribute.
@@ -165,20 +177,14 @@ class TinyUI {
 				//</function.setStyle></Label>
                 case [fnName, _] if (fnName.startsWith("function.")):
                     fnName = fnName.substr(9); //"function.".length == 9
-					var args: Array<String> = child.attributes().array();
-					if (args.length > 1) {
-						for (a in args) {
-							if (dotOrder(a) == null) {
-								Context.error('argument $a for function $fnName is not in format argName.order', xmlPos);
-							}
-						}
-						args.sort(function(a, b) return dotOrder(a) - dotOrder(b));
-					}
-					args = args.map(child.get);
+					var args: Array<String> = getFnNodeArgs(child);
 					
 					for (child2 in child.elements()) {
                         switch(child2.nodeName) {
-                            case s if(s == "this" || s == "function" || s.startsWith("function.")):
+                            case "this":
+                                getFnNodeArgs(child2).iter(args.push);
+                                
+                            case s if(s == "function" || s.startsWith("function.")):
                                 Context.error('Invalid node [$s] of function.$fnName node!', xmlPos);
 
                             //if `node` is `function.$fnName` node then `child` is className of a fnName's argument

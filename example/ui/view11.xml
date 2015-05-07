@@ -1,0 +1,5 @@
+<UI>
+    <!--tinyui do not support nesting view items.
+    The UI has nested items should be split into a dedicated view class -->
+    <View8 />
+</UI>

@@ -1,5 +1,17 @@
 <UI>
-    <!--tinyui do not support nesting view items.
-    The UI has nested items should be split into a dedicated class -->
-    <View8 />
+    <TextField text="'Hi TinyUI!'"
+               var.largeFmt="new TextFormat('Tahoma', 22, 0xFF0000)">
+       <!--We pass arguments to the function by adding attributes and/or child nodes to the function.fnName node.
+       Note that, when declare >1 attributes, we need add `.number` to the attribute names to ordering the arguments.
+       This method extract the number (if any) from attribute name.
+       Also note: We can NOT use declared order of attributes because Xml.attributes() will not preserved the order.-->
+        <function.setTextFormat format.0="largeFmt" beginIndex.1="0" endIndex.2="3" />
+            
+		<function.setTextFormat>
+            <TextFormat font="'Tahoma'" size="13" color="0xFF0000" bold="true" />
+            <this beginIndex.1="3" endIndex.2="7" />
+        </function.setTextFormat>
+            
+        <function setTextFormat="largeFmt, 7, 10" />
+	</TextField>
 </UI>
