@@ -277,8 +277,11 @@ class TinyUI {
 
                 case [fieldName, NodeCtx.Field(tpe)]:
                     //FIXME if tpe is not a ClassType?
-                    tpe = tpe.getClass().findField(fieldName).type;
-                    
+                    var field = tpe.getClass().findField(fieldName);
+                    if (field == null) {
+                        Context.fatalError('Can not find field `$fieldName` in class $tpe', xmlPos);
+                    }
+                    tpe = field.type;
                     var baseType = tpe.baseType();
                     var childVarName = localVarNameGen.next(baseType.name);
                     var newExpr = getNewExpr(child, tpe);
@@ -291,7 +294,7 @@ class TinyUI {
 		
 		return code;
 	}
-
+    
     function genInitCode(xml: Xml, code: String): Field {
         //get initUI arguments, ex: <UI function="w: Int, h: Int" ..>
         var args: String = xml.get("function");
