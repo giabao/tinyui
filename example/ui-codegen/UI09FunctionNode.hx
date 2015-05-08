@@ -20,7 +20,8 @@ class UI09FunctionNode extends Sprite {
 		__uiTextFormat1.size = 13;
 		__uiTextFormat1.color = 0xFF0000;
 		__uiTextFormat1.font = "Tahoma";
-		__uiTextField1.setTextFormat(__uiTextFormat1, 3, 7);
+		var __uiInt1 = 3;
+		__uiTextField1.setTextFormat(__uiTextFormat1, __uiInt1, 7);
 		__uiTextField1.setTextFormat(largeFmt, 7, 10);
 		this.addChild(__uiTextField1);
 	}

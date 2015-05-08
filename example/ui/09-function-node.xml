@@ -19,7 +19,8 @@
             
 		<this.setTextFormat>
             <TextFormat font="'Tahoma'" size="13" color="0xFF0000" bold="true" />
-            <this beginIndex.1="3" endIndex.2="7" />
+            <Int new="3"/>
+            <this endIndex="7" />
         </this.setTextFormat>
 
         <!--Note the space after node name :D-->
