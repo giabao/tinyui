@@ -248,7 +248,7 @@ class TinyUI {
                     var tpe = Context.getType(className);
                     var newExpr = getNewExpr(child, tpe);
                     //should we declare an class instance var field for this xml node
-                    if (childVarName != null) {
+                    if (childVarName != null && !childVarName.startsWith("#")) {
                         var baseType = tpe.baseType();
                         if (baseType == null) {
                             Context.error('Can not find type $className', xmlPos);
@@ -266,7 +266,8 @@ class TinyUI {
                         childVarName = "this." + childVarName;
                         code += '$childVarName = $newExpr;';
                     } else {
-                        childVarName = localVarNameGen.next(className);
+                        //ex: <Button var="#myLocalVar" />
+                        childVarName = childVarName != null? childVarName.substr(1) : localVarNameGen.next(className);
                         code += 'var $childVarName = $newExpr;';
                     }
 

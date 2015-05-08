@@ -37,5 +37,16 @@
         </SOURCES>
       </library>
     </orderEntry>
+    <orderEntry type="module-library">
+      <library name="haxelib|C:/HaxeToolkit/haxe/lib/advanced-layout/git">
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/../../../advanced-layout/git" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/../../../advanced-layout/git" />
+        </SOURCES>
+      </library>
+    </orderEntry>
   </component>
 </module>

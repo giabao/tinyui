@@ -1,24 +1,33 @@
 import openfl.display.Sprite;
 
+import UI01Empty; //import for compiling
+import UI02FieldAttr;
+import UI03ThisNode;
+import UI04LocalVar;
+import UI05InitUIArgs;
+import UI06ViewItem;
+import UI07DeclareVar;
+import UI08ItemFieldNode;
+import UI11NestedItems;
+
 class Main extends Sprite {
     public function new() {
         super();
-        new UI01Empty();
-        new UI02FieldAttr();
-        new UI03ThisNode();
-        new UI04LocalVar();
-        new UI05InitUIArgs();
-        new UI06ViewItem();
-        new UI07DeclareVar();
-        new UI08ItemFieldNode();
+//        ex1();
+        ex2();
+    }
+
+    function ex1() {
         addChild(new UI09FunctionNode());
 
         var v10 = new UI10NewExpression();
         addChildAt(v10, 0);
         v10.initUI();
 
-        new UI11NestedItems();
-
         addChild(new UI12ForLoop());
+    }
+
+    function ex2() {
+        addChild(new UI13Layout());
     }
 }

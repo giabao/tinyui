@@ -16,6 +16,7 @@
 	<source path="src" />
 	<haxelib name="tinyui" />
 	<haxelib name="openfl" />
+	<haxelib name="advanced-layout" />
 
 	<!-- assets -->
 	<assets path="assets/img" rename="img" />

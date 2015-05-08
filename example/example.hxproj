@@ -19,12 +19,13 @@
     <class path="C:\HaxeToolkit\haxe\lib\tinyui\git\main\src" />
     <class path="C:\HaxeToolkit\haxe\lib\openfl\3,0,3" />
     <class path="C:\HaxeToolkit\haxe\lib\lime\2,3,3" />
+    <class path="C:\HaxeToolkit\haxe\lib\advanced-layout\git" />
     <class path="src" />
     <class path="bin\flash\haxe" />
   </classpaths>
   <!-- Build options -->
   <build>
-    <option directives="tinyui=0.0.0&#xA;openfl=3.0.3&#xA;lime=2.3.3&#xA;openfl-next&#xA;tools=2.3.3&#xA;no-compilation&#xA;openfl-flash&#xA;web" />
+    <option directives="tinyui=0.0.0&#xA;openfl=3.0.3&#xA;lime=2.3.3&#xA;advanced-layout=0.4.1&#xA;openfl-next&#xA;tools=2.3.3&#xA;no-compilation&#xA;openfl-flash&#xA;web" />
     <option flashStrict="False" />
     <option noInlineOnDebug="False" />
     <option mainClass="ApplicationMain" />
