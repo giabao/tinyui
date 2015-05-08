@@ -36,13 +36,14 @@ class TinyUI {
         } catch(e: Dynamic) {
             Context.fatalError('Can NOT parse $xmlFile, $e', Context.currentPos());
         }
-        
+
         try {
             var tinyUI = new TinyUI(Context.makePosition( { min:0, max:0, file:xmlFile } ));
             return tinyUI.doBuild(xml);
-        } catch(e: Dynamic) {
-            Sys.println(haxe.CallStack.toString(haxe.CallStack.exceptionStack()));
-            Context.error(Std.string(e), Context.currentPos());
+        } catch (e: Dynamic) {
+            var msg = 'Error when TinyUI is building xml file $xmlFile\nError: $e\nCallStack:' +
+                haxe.CallStack.toString(haxe.CallStack.exceptionStack());
+            Context.fatalError(msg, Context.currentPos());
             return null;
         }
     }
@@ -100,6 +101,10 @@ class TinyUI {
 	  * 3. other attributes: foo.baz="expr"
 	  *   convert to: $varName.foo.baz = expr; */
     function attr2Haxe(node: Xml, varName: String): String {
+        //`for` node's attributes is already processed in method `processNode`
+        if (node.nodeName == "for") {
+            return "";
+        }
         var code = "";
         for (attr in node.attributes()) {
             if (attr == "new" || attr == "var" || attr == "function") {
@@ -149,10 +154,7 @@ class TinyUI {
      * @param ctx - see doc of NodeCtx enum */
 	function processNode(node: Xml, varName: String, ctx: NodeCtx): String {
 		//1. process node's attributes
-		var code = "";
-        if (node.nodeName != "for") {
-            code += attr2Haxe(node, varName);
-        }
+		var code = attr2Haxe(node, varName);
 		
 		//2. process node's elements
 		for (child in node.elements()) {
