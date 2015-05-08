@@ -106,25 +106,49 @@ class TinyUI {
             return "";
         }
         var code = "";
+        var fnCallCount = 0;
         for (attr in node.attributes()) {
-            if (attr == "new" || attr == "var" || attr == "function") {
-                continue;
-            }
-            var value = node.get(attr);
-            if (attr.startsWith("var.")) {
-                var localVarName = attr.substr(4); //"var.".length == 4
+            switch(attr) {
+                //"new" attribute is processed in `processNode` method.
+                //"var" attribute of ViewItems is processed in `processNode` method.
+                //"function" attribute of root node is processed in `genInitCode` method.
+                case "new" | "var" | "function":
+                    continue;
+                    
+                case fnName if (fnName.startsWith("this.")):
+                    fnName = fnName.substr(5); //"this.".length == 5
+                    if (fnName == "") {
+                        Context.error('invalid "this." attribute in ${node.nodeName} node', xmlPos);
+                    }
+                    
+                    fnCallCount++;
+                    if (fnCallCount == 2) {
+                        var msg = 'TinyUI found multi function calls (syntax: "this.fnName") in ${node.nodeName} node. ' +
+                            "Note that the order of those callings is un-specified!";
+                        Context.warning(msg, xmlPos);
+                    }
+                    
+                    var value = node.get(attr);
+                    code += '$varName.$fnName($value);';
+                    
                 //ex: <Item var.someVar:Float="Math.max(1+2, 4)"..>
                 //or: <Item var.someVar="1+2"..>
-                code += 'var $localVarName = $value;';
-            } else {
-				//ex: <Button label.text="'OK'" />
-                code += '$varName.$attr = $value;';
+                case localVarName if (localVarName.startsWith("var.")):
+                    localVarName = attr.substr(4); //"var.".length == 4
+                    var value = node.get(attr);
+                    code += 'var $localVarName = $value;';
+                    
+                //ex: <Button label.text="'OK'" />    
+                case fieldName:
+                    var value = node.get(attr);
+                    code += '$varName.$attr = $value;';
+                    
             }
         }
         return code;
     }
 	
-    /** We pass arguments to the function by adding attributes and/or child nodes to the function.fnName node.
+    /** We pass arguments to the function by adding attributes and/or child nodes to the this.fnName node.
      * Note that, when declare >1 attributes, we need add `.number` to the attribute names to ordering the arguments.
      * This method extract the number (if any) from attribute name.
      * Also note: We can NOT use declared order of attributes because Xml.attributes() will not preserved the order. */
@@ -137,7 +161,7 @@ class TinyUI {
         if (args.length > 1) {
             for (a in args) {
                 if (dotOrder(a) == null) {
-                    Context.error('argument $a in a function.fnName node - which have >1 attributes - is not in format argName.order', xmlPos);
+                    Context.error('argument $a when calling function in `this.fnName` node - which have >1 attributes - is not in format argName.order', xmlPos);
                 }
             }
             args.sort(function(a, b) return dotOrder(a) - dotOrder(b));
@@ -165,23 +189,23 @@ class TinyUI {
                     code += attr2Haxe(child, varName);
 					
 				//each attribute will be a function name, with only one argument - that is the value of attribute.
-				//ex: <Button><function setStyle="'icon', myIcon" /></Button>
+				//ex: <Button><this. setStyle="'icon', myIcon" /></Button>
                 //children nodes are ignored
-				case ["function", _]:
+				case ["this.", _]:
 					for (attr in child.attributes()) {
 						var value = child.get(attr);
 						code += '$varName.$attr($value);';
 					}
                     
 				//ex: see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/fl/core/UIComponent.html#setStyle%28%29
-				//<Label><function.setStyle style.1="'textFormat'" value.2="new TextFormat('Tahoma', 16)" /></Label>
+				//<Label><this.setStyle style.1="'textFormat'" value.2="new TextFormat('Tahoma', 16)" /></Label>
 				
 				//ex2:
-				//<Label><function.setStyle style="'textFormat'">
+				//<Label><this.setStyle style="'textFormat'">
 				//  <TextFormat font="'Tahoma'" size="16" bold="true" />
-				//</function.setStyle></Label>
-                case [fnName, _] if (fnName.startsWith("function.")):
-                    fnName = fnName.substr(9); //"function.".length == 9
+				//</this.setStyle></Label>
+                case [fnName, _] if (fnName.startsWith("this.")):
+                    fnName = fnName.substr(5); //"this.".length == 5
 					var args: Array<String> = getFnNodeArgs(child);
 					
 					for (child2 in child.elements()) {
@@ -189,10 +213,10 @@ class TinyUI {
                             case "this":
                                 getFnNodeArgs(child2).iter(args.push);
                                 
-                            case s if(s == "function" || s.startsWith("function.")):
-                                Context.error('Invalid node [$s] of function.$fnName node!', xmlPos);
+                            case s if(s.startsWith("this.")):
+                                Context.error('Invalid node [$s] of this.$fnName node!', xmlPos);
 
-                            //if `node` is `function.$fnName` node then `child` is className of a fnName's argument
+                            //if `node` is `this.$fnName` node then `child` is className of a fnName's argument
                             case childClassName:
 						        var childVarName = localVarNameGen.next(childClassName);
                                 var tpe = Context.getType(childClassName);

@@ -1,17 +1,28 @@
 <UI>
+    <!--TinyUI only support calling function in xml for `this` target
+        (or with extension method - see the layout example)
+        If you want to call functions with other context, you should call in haxe code.
+
+        To call functions, prefix `this.` to the function name.
+        Ex: <Foo baz="1" /> will gen code: foo.baz = 1;
+            <Foo this.baz="1" will gen code: foo.baz(1); -->
+    <Shape this.graphics.drawCircle="100,100,50" />
+
+    <!--You can also call function using `this.` child nodes as bellow: -->
     <TextField text="'Hi TinyUI!'"
                var.largeFmt="new TextFormat('Tahoma', 22, 0xFF0000)">
-       <!--We pass arguments to the function by adding attributes and/or child nodes to the function.fnName node.
+       <!--We pass arguments to the function by adding attributes and/or child nodes to the this.fnName node.
        Note that, when declare >1 attributes, we need add `.number` to the attribute names to ordering the arguments.
        This method extract the number (if any) from attribute name.
        Also note: We can NOT use declared order of attributes because Xml.attributes() will not preserved the order.-->
-        <function.setTextFormat format.0="largeFmt" beginIndex.1="0" endIndex.2="3" />
+        <this.setTextFormat format.0="largeFmt" beginIndex.1="0" endIndex.2="3" />
             
-		<function.setTextFormat>
+		<this.setTextFormat>
             <TextFormat font="'Tahoma'" size="13" color="0xFF0000" bold="true" />
             <this beginIndex.1="3" endIndex.2="7" />
-        </function.setTextFormat>
-            
-        <function setTextFormat="largeFmt, 7, 10" />
+        </this.setTextFormat>
+
+        <!--Note the space after node name :D-->
+        <this. setTextFormat="largeFmt, 7, 10" />
 	</TextField>
 </UI>
