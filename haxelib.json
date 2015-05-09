@@ -1,0 +1,14 @@
+{
+  "name"         : "tinyui",
+  "url"          : "https://github.com/giabao/tinyui",
+  "license"      : "MIT",
+  "tags"         : ["cross", "openfl", "flash", "html5", "cpp", "ui", "macro", "layout"],
+  "description"  : "A tiny UI macro for injecting ui items declared in a xml file into a haxe class.",
+  "version"      : "3.0.1",
+  "releasenote"  : "Recommend (optional) using `advanced-layout` lib for layout",
+  "classPath"    : "main/src",
+  "contributors" : ["SanDinh.com"],
+  "dependencies" : {
+    "openfl"        : ""
+  }
+}

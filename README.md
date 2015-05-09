@@ -44,6 +44,10 @@ haxelib git tinyui https://github.com/giabao/tinyui.git master main/src
 4. see [example](example)
 
 ### Changelogs
+##### 3.0.1
++ change licence to MIT license.
++ haxelib submit
+
 ##### 3.0.0
 + break changes for better meaning and less verbose:
 Change function calling syntax from:
@@ -76,7 +80,6 @@ As always, see the generated code for detail.
 (deprecated) first public release
 
 ### Licence
-This software is licensed under the Apache 2 license:
-http://www.apache.org/licenses/LICENSE-2.0
+This software is licensed under the MIT license.
 
 Copyright 2015 Sân Đình (http://sandinh.com)
