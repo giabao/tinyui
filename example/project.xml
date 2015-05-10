@@ -15,7 +15,9 @@
 	<!-- classpath, haxe libs -->
 	<source path="src" />
 	<haxelib name="tinyui" />
+	<haxelib name="openfl-tooltip" />
 	<haxelib name="openfl" />
+	<haxelib name="actuate" />
 	<haxelib name="advanced-layout" />
 
 	<!-- assets -->

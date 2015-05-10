@@ -15,7 +15,8 @@ class Main extends Sprite {
     public function new() {
         super();
 //        ex1();
-        ex2();
+//        ex2();
+        addChild(new UI14Tooltip());
     }
 
     function ex1() {
