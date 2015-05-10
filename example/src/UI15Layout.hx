@@ -7,8 +7,8 @@ import layout.Direction;
 
 using layout.LayoutUtils;
 
-@:build(TinyUI.build('ui/13-layout.xml'))
-class UI13Layout extends Sprite {
+@:build(TinyUI.build('ui/15-layout.xml'))
+class UI15Layout extends Sprite {
     static inline var PADDING = 5;
     
     public function new() {

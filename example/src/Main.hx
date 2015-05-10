@@ -7,29 +7,33 @@ import UI04LocalVar;
 import UI05InitUIArgs;
 import UI06ViewItem;
 import UI07DeclareVar;
-import UI071ViewItemLocalVarName;
-import UI08ItemFieldNode;
-import UI11NestedItems;
+import UI08ViewItemLocalVarName;
+import UI09ItemFieldNode;
+import UI10FunctionNode;
+import UI11NewExpression;
+import UI12ExtMethod;
+import UI13NestedItems;
+import UI14ForLoop;
+import UI15Layout;
+import UI16Tooltip;
 
 class Main extends Sprite {
     public function new() {
         super();
 //        ex1();
-//        ex2();
-        addChild(new UI14Tooltip());
+
+//        addChild(new UI15Layout());
+//        addChild(new UI16Tooltip());
+        addChild(new UI12ExtMethod());
     }
 
     function ex1() {
-        addChild(new UI09FunctionNode());
+        addChild(new UI10FunctionNode());
 
-        var v10 = new UI10NewExpression();
+        var v10 = new UI11NewExpression();
         addChildAt(v10, 0);
         v10.initUI();
 
-        addChild(new UI12ForLoop());
-    }
-
-    function ex2() {
-        addChild(new UI13Layout());
+        addChild(new UI14ForLoop());
     }
 }

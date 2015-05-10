@@ -1,12 +1,11 @@
 import openfl.display.Sprite;
 import openfl.text.TextField;
 import openfl.text.TextFormat;
+import openfl.text.TextFormatAlign;
+import openfl.display.Shape;
 
-using com.sandinh.TipTools;
-
-@:build(TinyUI.build('ui/14-tooltip.xml'))
-class UI14Tooltip extends Sprite {
-    
+@:build(TinyUI.build('ui/10-function-node.xml'))
+class UI10FunctionNode extends Sprite {
     public function new() {
         super();
         initUI();
