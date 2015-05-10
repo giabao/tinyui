@@ -48,5 +48,27 @@
         </SOURCES>
       </library>
     </orderEntry>
+    <orderEntry type="module-library">
+      <library name="haxelib|C:/HaxeToolkit/haxe/lib/openfl-tooltip/git/src">
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/../../../openfl-tooltip/git/src" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/../../../openfl-tooltip/git/src" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="haxelib|C:/HaxeToolkit/haxe/lib/actuate/1,8,4">
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/../../../actuate/1,8,4" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/../../../actuate/1,8,4" />
+        </SOURCES>
+      </library>
+    </orderEntry>
   </component>
 </module>

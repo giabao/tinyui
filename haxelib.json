@@ -4,8 +4,8 @@
   "license"      : "MIT",
   "tags"         : ["cross", "openfl", "flash", "html5", "cpp", "ui", "macro", "layout"],
   "description"  : "A tiny UI macro for injecting ui items declared in a xml file into a haxe class.",
-  "version"      : "3.0.1",
-  "releasenote"  : "Recommend (optional) using `advanced-layout` lib for layout",
+  "version"      : "3.1.0",
+  "releasenote"  : "+ add some example: using extension method & tooltip\n+ add convenient class com.sandinh.ui.BitmapTools",
   "classPath"    : "main/src",
   "contributors" : ["SanDinh.com"],
   "dependencies" : {

@@ -44,6 +44,11 @@ haxelib git tinyui https://github.com/giabao/tinyui.git master main/src
 4. see [example](example)
 
 ### Changelogs
+##### 3.1.0
+(backward compatible with 3.x)
++ add some example: using extension method & tooltip
++ add convenient class com.sandinh.ui.BitmapTools
+
 ##### 3.0.1
 + change licence to MIT license.
 + haxelib submit
