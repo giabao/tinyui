@@ -1,0 +1,4 @@
+<UI>
+	<TextField var="#txt1" text="'Hi TinyUI!'" />
+    <TextField x="txt1.width" text="'Hi TinyUI!'" />
+</UI>

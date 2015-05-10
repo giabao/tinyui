@@ -7,6 +7,7 @@ import UI04LocalVar;
 import UI05InitUIArgs;
 import UI06ViewItem;
 import UI07DeclareVar;
+import UI071ViewItemLocalVarName;
 import UI08ItemFieldNode;
 import UI11NestedItems;
 
