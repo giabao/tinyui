@@ -15,7 +15,6 @@ using TinyUI.Tools;
 using haxe.macro.TypeTools;
 using haxe.macro.MacroStringTools;
 
-//TODO suport debuging in generated code with Position info
 class TinyUI {
     static var genCodeDir: String = null;
     static inline var CodeGenBegin = "\n\t//++++++++++ code gen by tinyui ++++++++++//\n\t";
@@ -50,7 +49,7 @@ class TinyUI {
 
     /** Position point to the xml file. we store this in a class var for convenient */
     var xmlPos: Position;
-    /** Used to store the buiding fields */
+    /** store the buiding fields */
 	var buildingFields: Array<Field> = [];
     var localVarNameGen = new LocalVarNameGen();
 
@@ -62,6 +61,8 @@ class TinyUI {
     function doBuild(xml: Xml): Array<Field> {        
         //code for initUI() method
         var code = processNode(xml, "this", NodeCtx.ViewItem);
+        
+        code += genUIModes(xml);
 
         buildingFields.push(genInitCode(xml, code));
         
@@ -169,6 +170,99 @@ class TinyUI {
         return args.map(node.get);
     }
 	
+    /**Process <this.> node
+     * each attribute will be a function name, with only one argument - that is the value of attribute.
+     * ex: <Button><this. setStyle="'icon', myIcon" /></Button>
+     * children nodes are ignored.
+     * 
+     * @return code */
+    static function processNodeAsMultiFnCall(node: Xml, varName: String): String {
+        var code = "";
+        for (attr in node.attributes()) {
+            var value = node.get(attr);
+            code += '$varName.$attr($value);';
+        }
+        return code;
+    }
+    
+    /**Process <this.functionName> node
+     * ex: see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/fl/core/UIComponent.html#setStyle%28%29
+     * <Label>
+     *   <this.setStyle style.1="'textFormat'" value.2="new TextFormat('Tahoma', 16)" />
+     * </Label>
+     * 
+     * ex2:
+     * <Label><this.setStyle style="'textFormat'">
+     *   <TextFormat font="'Tahoma'" size="16" bold="true" />
+     * </this.setStyle></Label>
+     * 
+     * @return code */
+    function processNodeAsOneFnCall(node: Xml, varName: String): String {
+        var code = "";
+        var fnName = node.nodeName.substr(5); //"this.".length == 5
+        var args: Array<String> = getFnNodeArgs(node);
+        
+        for (child in node.elements()) {
+            switch(child.nodeName) {
+                case "this":
+                    getFnNodeArgs(child).iter(args.push);
+                    
+                case s if(s.startsWith("this.")):
+                    Context.error('Invalid node [$s] of this.$fnName node!', xmlPos);
+
+                //if `node` is `this.$fnName` node then `child` is className of a fnName's argument
+                case childClassName:
+                    var childVarName = localVarNameGen.next(childClassName);
+                    var tpe = Context.getType(childClassName);
+                    var newExpr = getNewExpr(child, tpe);
+                    code += 'var $childVarName = $newExpr;';
+                    code += processNode(child, childVarName, NodeCtx.Field(tpe));
+                    args.push(childVarName);
+            }
+        }
+        
+        return code + '$varName.$fnName(' + args.join(",") + ");";
+    }
+    
+    /**Process node that declare a view item.
+     * each View Item node has `var` attribute will be generated to a haxa field.
+     * @return code */
+    function processViewItemNode(node: Xml, className: String): String {
+        var code = "";
+        
+        //child variable name or field name of view class
+        var childVarName: String = node.get("var");
+        var tpe = Context.getType(className);
+        var newExpr = getNewExpr(node, tpe);
+        //should we declare an class instance var field for this xml node
+        if (childVarName != null && !childVarName.startsWith("#")) {
+            var baseType = tpe.baseType();
+            if (baseType == null) {
+                Context.error('Can not find type $className', xmlPos);
+            }
+            buildingFields.push({
+                pos    : xmlPos,
+                name   : childVarName,
+                access : [APublic], //TODO support asses, doc, meta?
+                kind   : FVar(TPath({ //TODO support params?
+                    name   : baseType.name,
+                    pack   : baseType.pack
+                }))
+            });
+
+            childVarName = "this." + childVarName;
+            code += '$childVarName = $newExpr;';
+        } else {
+            //ex: <Button var="#myLocalVar" />
+            childVarName = childVarName != null? childVarName.substr(1) : localVarNameGen.next(className);
+            code += 'var $childVarName = $newExpr;';
+        }
+
+        code += processNode(node, childVarName, NodeCtx.Field(tpe));
+
+        return code + 'this.addChild($childVarName);';
+    }
+    
     /** loop throught xml node recursively and generate haxe code for initUI function.
      * This method also push Fields to `buildingFields` if ctx is ViewItem and the ViewItem node has `var` attribute.
      * @param node - the current xml node we are processing when looping.
@@ -188,46 +282,11 @@ class TinyUI {
                 case ["this", _]:
                     code += attr2Haxe(child, varName);
 					
-				//each attribute will be a function name, with only one argument - that is the value of attribute.
-				//ex: <Button><this. setStyle="'icon', myIcon" /></Button>
-                //children nodes are ignored
 				case ["this.", _]:
-					for (attr in child.attributes()) {
-						var value = child.get(attr);
-						code += '$varName.$attr($value);';
-					}
-                    
-				//ex: see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/fl/core/UIComponent.html#setStyle%28%29
-				//<Label><this.setStyle style.1="'textFormat'" value.2="new TextFormat('Tahoma', 16)" /></Label>
+                    code += processNodeAsMultiFnCall(child, varName);
 				
-				//ex2:
-				//<Label><this.setStyle style="'textFormat'">
-				//  <TextFormat font="'Tahoma'" size="16" bold="true" />
-				//</this.setStyle></Label>
                 case [fnName, _] if (fnName.startsWith("this.")):
-                    fnName = fnName.substr(5); //"this.".length == 5
-					var args: Array<String> = getFnNodeArgs(child);
-					
-					for (child2 in child.elements()) {
-                        switch(child2.nodeName) {
-                            case "this":
-                                getFnNodeArgs(child2).iter(args.push);
-                                
-                            case s if(s.startsWith("this.")):
-                                Context.error('Invalid node [$s] of this.$fnName node!', xmlPos);
-
-                            //if `node` is `this.$fnName` node then `child` is className of a fnName's argument
-                            case childClassName:
-						        var childVarName = localVarNameGen.next(childClassName);
-                                var tpe = Context.getType(childClassName);
-                                var newExpr = getNewExpr(child2, tpe);
-                                code += 'var $childVarName = $newExpr;';
-                                code += processNode(child2, childVarName, NodeCtx.Field(tpe));
-                                args.push(childVarName);
-                        }
-					}
-					
-					code += '$varName.$fnName(' + args.join(",") + ");";
+					code += processNodeAsOneFnCall(child, varName);
 
                 case ["for", NodeCtx.ViewItem]:
                     var attrs = child.attributes();
@@ -240,41 +299,13 @@ class TinyUI {
                     code += processNode(child, varName, NodeCtx.ViewItem);
                     code += '}';
 
+                case [modeName, NodeCtx.ViewItem] if (modeName.startsWith("mode.")):
+                    //will be process later in `genUIMode` method
+                    
 				//if `node` is root node (map to View class) then `child` is className of a View Item
-                //each View Item node has `var` attribute will be generated to a haxa field.
 				case [className, NodeCtx.ViewItem]:
-                    //child variable name or field name of view class
-                    var childVarName: String = child.get("var");
-                    var tpe = Context.getType(className);
-                    var newExpr = getNewExpr(child, tpe);
-                    //should we declare an class instance var field for this xml node
-                    if (childVarName != null && !childVarName.startsWith("#")) {
-                        var baseType = tpe.baseType();
-                        if (baseType == null) {
-                            Context.error('Can not find type $className', xmlPos);
-                        }
-                        buildingFields.push({
-                            pos    : xmlPos,
-                            name   : childVarName,
-                            access : [APublic], //TODO support asses, doc, meta?
-                            kind   : FVar(TPath({ //TODO support params?
-                                name   : baseType.name,
-                                pack   : baseType.pack
-                            }))
-                        });
-
-                        childVarName = "this." + childVarName;
-                        code += '$childVarName = $newExpr;';
-                    } else {
-                        //ex: <Button var="#myLocalVar" />
-                        childVarName = childVarName != null? childVarName.substr(1) : localVarNameGen.next(className);
-                        code += 'var $childVarName = $newExpr;';
-                    }
-
-                    code += processNode(child, childVarName, NodeCtx.Field(tpe));
-
-                    code += 'this.addChild($childVarName);';
-
+                    code += processViewItemNode(child, className);
+                    
                 case [fieldName, NodeCtx.Field(tpe)]:
                     //FIXME if tpe is not a ClassType?
                     var field = tpe.getClass().findField(fieldName);
@@ -295,6 +326,116 @@ class TinyUI {
 		return code;
 	}
     
+    static inline function isModeNode(node: Xml) return node.nodeName.startsWith("mode.");
+    
+    function genUIModes(xml: Xml): String {
+        if (! xml.elements().exists(isModeNode)) return "";
+        
+        inline function viewItemByVar(varName: String): Null<Xml>
+            return xml.elements().find(
+                function(node) {
+                    var v = node.get("var");
+                    return v == varName || v == "#" + varName;
+                }
+            );
+        
+        //public var uiMode(default, set): String;
+        buildingFields.push({
+                            pos    : xmlPos,
+                            name   : "uiMode",
+                            access : [APublic], //TODO support doc?
+                            kind   : FProp("default", "set", TPath({
+                                name   : "String",
+                                pack   : []
+                            }))
+                        });
+        
+        //var _set_uiMode: String -> Void;
+        buildingFields.push({
+                            pos    : xmlPos,
+                            name   : "_set_uiMode",
+                            kind   : FVar(TFunction(
+                                [TPath({name: "String", pack: []})],
+                                TPath({name: "Void", pack: []})
+                            ))
+                        });
+        //generate dummy function to extract expressions
+        var dummy : Expr = Context.parse(
+            "function (mode: String): String {" +
+            "  if (_set_uiMode == null) {" +
+            "    throw new openfl.errors.Error('Warning: Can not set `uiMode = \"' + mode +'\"` before calling `initUI`');" +
+            "  }" +
+            "  if (mode != uiMode) {" +
+            "    _set_uiMode(mode);" +
+            "     uiMode = mode;" +
+            "  }" +
+            "  return mode;" +
+            "}", xmlPos);
+
+        //extract function
+        var fun : Function = switch(dummy.expr){
+            case EFunction(_,f) : f;
+            default: null;
+        }
+        
+        buildingFields.push({
+            pos    : xmlPos,
+            name   : "set_uiMode",
+            kind   : FFun({
+                ret    : fun.ret,
+                expr   : fun.expr,
+                args   : fun.args
+            })
+        });
+                        
+        //add modes code to an inner function (in initUI) and set _set_uiMode = that function
+        var code = "this._set_uiMode = function(uiNewMode: String) { switch(uiNewMode) {";
+        var defaultMode: String = null;
+        for (node in xml.elements()) {
+            if (! node.nodeName.startsWith("mode.")) {
+                continue;
+            }
+            var modeName = node.nodeName.substr(5); //"mode.".length == 5
+            if (node.get("default") == "true") {
+                defaultMode = modeName;
+            }
+            code += 'case "$modeName":';
+            
+            for (child in node.elements()) {
+                switch(child.nodeName) {
+                    case "this":
+                        code += attr2Haxe(child, "this");
+					
+                    case "this.":
+                        code += processNodeAsMultiFnCall(child, "this");
+                    
+                    case fnName if (fnName.startsWith("this.")):
+                        code += processNodeAsOneFnCall(child, "this");
+                        
+                    case varName:
+                        //similar to: code += processViewItemNode(child, className);
+                        //but do not process: addChild, `new` expression, declaring var field.
+                        var itemNode = viewItemByVar(varName);
+                        if (itemNode == null) {
+                            Context.error('View Item for variable name "$varName" not found. TinyUI can not parse ui mode <mode.$modeName>', xmlPos);
+                        }
+                        if (itemNode.get("var").charAt(0) != "#") {
+                            varName = 'this.$varName';
+                        }
+                        var tpe = Context.getType(itemNode.nodeName);
+                        code += processNode(child, varName, NodeCtx.Field(tpe));
+                }
+            }
+        }
+        
+        code += "default: throw new openfl.errors.ArgumentError('This TinyUI view do not have mode \"' + uiNewMode + '\"');}}";
+        if (defaultMode != null) {
+            code += 'this.uiMode = "$defaultMode";';
+        }
+
+        return code;
+    }
+    
     function genInitCode(xml: Xml, code: String): Field {
         //get initUI arguments, ex: <UI function="w: Int, h: Int" ..>
         var args: String = xml.get("function");
@@ -310,7 +451,11 @@ class TinyUI {
         }
         
         //generate dummy function to extract expressions
-        var dummy : Expr = Context.parse('function ($args) { $code }', xmlPos);
+        var dummy : Expr = try {
+            Context.parse('function ($args) { $code }', xmlPos);
+        } catch (e: Dynamic) {
+            Context.error('There are some error when parse the code generated from xml.\nError: $e\nCode:\n$code', xmlPos);
+        }
 
         //extract function
         var fun : Function = switch(dummy.expr){
@@ -324,9 +469,8 @@ class TinyUI {
             access : isOverride? [AOverride, APublic] : [APublic],
             kind   : FFun({
                 ret    : null,
-                params : [],
                 expr   : fun.expr,
-                args   : fun.args,
+                args   : fun.args
             })
         };
     }
@@ -380,11 +524,47 @@ class TinyUI {
 }
 
 class Tools {
+    /** Creates an Array from Iterator `it` */
     public static function array<A>( it : Iterator<A> ) : Array<A> {
 		var a = new Array<A>();
 		while(it.hasNext())
 			a.push(it.next());
 		return a;
+	}
+    
+    /**
+		Tells if `it` contains an element for which `f` is true.
+
+		This function returns true as soon as an element is found for which a
+		call to `f` returns true.
+
+		If no such element is found, the result is false.
+
+		If `f` is null, the result is unspecified.
+	**/
+	public static function exists<A>( it : Iterator<A>, f : A -> Bool ): Bool {
+        while (it.hasNext())
+            if (f(it.next()))
+                return true;
+		return false;
+	}
+    
+    /**
+		Returns the first element of `it` for which `f` is true.
+
+		This function returns as soon as an element is found for which a call to
+		`f` returns true.
+
+		If no such element is found, the result is null.
+
+		If `f` is null, the result is unspecified.
+	**/
+	public static function find<T>( it : Iterator<T>, f : T -> Bool ) : Null<T> {
+		while (it.hasNext()) {
+            var v = it.next();
+            if(f(v)) return v;
+        }
+		return null;
 	}
     
     public static function baseType(tpe: Type): Null<BaseType> {

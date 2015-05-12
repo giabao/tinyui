@@ -16,6 +16,7 @@ import UI13NestedItems;
 import UI14ForLoop;
 import UI15Layout;
 import UI16Tooltip;
+import UI17Modes;
 
 class Main extends Sprite {
     public function new() {
@@ -24,7 +25,8 @@ class Main extends Sprite {
 
 //        addChild(new UI15Layout());
 //        addChild(new UI16Tooltip());
-        addChild(new UI12ExtMethod());
+//        addChild(new UI12ExtMethod());
+        addChild(new UI17Modes());
     }
 
     function ex1() {
