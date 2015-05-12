@@ -44,6 +44,10 @@ haxelib git tinyui https://github.com/giabao/tinyui.git master main/src
 4. see [example](example)
 
 ### Changelogs
+##### 3.2.0
+(backward compatible with 3.x)
++ support view modes (view states)
+
 ##### 3.1.0
 (backward compatible with 3.x)
 + add some example: using extension method & tooltip
