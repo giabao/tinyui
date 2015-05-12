@@ -325,12 +325,45 @@ class TinyUI {
 		
 		return code;
 	}
-    
+
+    /** return true if node has name startsWith "mode." */
     static inline function isModeNode(node: Xml) return node.nodeName.startsWith("mode.");
-    
+
+    /**Generate code for view mode feature:
+     * @see example modes.xml & the generated code for more detail.
+     * @param xml The view (root) node
+     * @return code
+     */
     function genUIModes(xml: Xml): String {
+        //if xml don't have mode nodes then return ""
         if (! xml.elements().exists(isModeNode)) return "";
         
+        //replace:
+        //<mode.xx>
+        //  <in var="var1,var2" attrs>..</in>
+        //</mode.xx>
+        //to:
+        //<mode.xx>
+        //  <var1 attrs>..</in>
+        //  <var2 attrs>..</in>
+        //</mode.xx>
+        function replaceShortcutNode(node: Xml) {
+            for (child in node.elements()) {
+                if (child.nodeName == "in") {
+                    node.removeChild(child);
+                    for (varName in child.get("var").split(",")) {
+                       node.addChild(child.cloneXml(varName, "var"));
+                    }
+                }
+            }
+        }
+        
+        //replaceShortcutNode for all mode nodes 
+        for (node in xml.elements())
+            if (isModeNode(node))
+                replaceShortcutNode(node);
+        
+        //find ViewItem node has name == varName or "#" + varName
         inline function viewItemByVar(varName: String): Null<Xml>
             return xml.elements().find(
                 function(node) {
@@ -359,6 +392,7 @@ class TinyUI {
                                 TPath({name: "Void", pack: []})
                             ))
                         });
+        
         //generate dummy function to extract expressions
         var dummy : Expr = Context.parse(
             "function (mode: String): String {" +
@@ -575,6 +609,15 @@ class Tools {
             case TAbstract(t, _): t.get();
             case _: null;
         }
+    }
+    
+    public static function cloneXml(node: Xml, newName: String = null, excludeAttr: String = null): Xml {
+        var ret = Xml.createElement(newName == null? node.nodeName : newName);
+        for (a in node.attributes())
+            if (a != excludeAttr)
+                ret.set(a, node.get(a));
+        node.iter(function(child) ret.addChild(cloneXml(child)));
+        return ret;
     }
 }
 

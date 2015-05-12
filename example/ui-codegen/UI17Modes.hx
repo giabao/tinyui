@@ -2,6 +2,7 @@ import openfl.display.Sprite;
 import openfl.display.Bitmap;
 import openfl.text.TextField;
 import openfl.text.TextFormat;
+import openfl.text.TextFieldAutoSize;
 import openfl.events.MouseEvent;
 
 using com.sandinh.ui.BitmapTools;
@@ -9,7 +10,7 @@ using com.sandinh.ui.BitmapTools;
 @:build(TinyUI.build('ui/17-modes.xml'))
 class UI17Modes extends Sprite {
 	//++++++++++ code gen by tinyui ++++++++++//
-	public var txt : openfl.text.TextField;
+	public var txt1 : openfl.text.TextField;
 	public var uiMode(default, set) : String
 	var _set_uiMode : String -> Void;
 	function set_uiMode(mode:String):String {
@@ -28,29 +29,44 @@ class UI17Modes extends Sprite {
 		var bmp1 = new flash.display.Bitmap();
 		bmp1.src("img/sd.jpg");
 		this.addChild(bmp1);
-		this.txt = new flash.text.TextField();
-		this.txt.border = true;
-		this.txt.borderColor = 0xFF0000;
-		this.txt.y = bmp1.y + 10;
-		this.addChild(this.txt);
+		this.txt1 = new flash.text.TextField();
+		this.txt1.autoSize = TextFieldAutoSize.LEFT;
+		this.txt1.border = true;
+		this.txt1.borderColor = 0xFF0000;
+		this.txt1.x = bmp1.width;
+		this.addChild(this.txt1);
+		var txt2 = new flash.text.TextField();
+		txt2.border = true;
+		txt2.borderColor = 0xFF0000;
+		txt2.x = bmp1.width + 200;
+		this.addChild(txt2);
 		this._set_uiMode = function(uiNewMode:String) {
 			switch (uiNewMode) {
 				case "m1":{
-					this.txt.text = "mode 1";
-					this.txt.type = DYNAMIC;
-					this.txt.x = 100;
-					this.txt.setTextFormat(fmt1);
+					this.txt1.text = "txt1 in mode 1";
+					txt2.text = "txt2 in mode 1";
 					bmp1.scaleX = 0.5;
 					bmp1.scaleY = 0.5;
+					this.txt1.type = DYNAMIC;
+					this.txt1.y = 100;
+					this.txt1.setTextFormat(fmt1);
+					txt2.type = DYNAMIC;
+					txt2.y = 100;
+					txt2.setTextFormat(fmt1);
 				};
 				case "m2":{
-					this.txt.text = "mode 2";
-					this.txt.defaultTextFormat = fmt2;
-					this.txt.type = INPUT;
-					this.txt.x = 100;
-					this.txt.setTextFormat(fmt2);
+					this.txt1.text = "txt1 in mode 2";
+					txt2.text = "txt2 in mode 2";
 					bmp1.scaleX = 1;
 					bmp1.scaleY = 1;
+					this.txt1.defaultTextFormat = fmt2;
+					this.txt1.type = INPUT;
+					this.txt1.y = 0;
+					this.txt1.setTextFormat(fmt2);
+					txt2.defaultTextFormat = fmt2;
+					txt2.type = INPUT;
+					txt2.y = 0;
+					txt2.setTextFormat(fmt2);
 				};
 				default:{
 					throw new openfl.errors.ArgumentError("This TinyUI view do not have mode \"" + uiNewMode + "\"");

@@ -1,7 +1,8 @@
 <UI var.fmt1="new TextFormat('Tahoma', 22, 0xFFFF00)"
     var.fmt2="new TextFormat('Tahoma', 12, 0xFF0000)">
     <Bitmap var="#bmp1" this.src="'img/sd.jpg'" />
-    <TextField var="txt" border="true" borderColor="0xFF0000" y="bmp1.y + 10" />
+    <TextField var="txt1" border="true" borderColor="0xFF0000" x="bmp1.width" autoSize="TextFieldAutoSize.LEFT" />
+    <TextField var="#txt2" border="true" borderColor="0xFF0000" x="bmp1.width + 200" />
     <!--declare modes (states) of View by adding some `mode.modeName` nodes (direct child of root node).
         TinyUI will add some fields to the View class:
             public var uiMode(default, set): String;
@@ -36,12 +37,17 @@
             + declare changes for ViewItem by adding node with name is var name of the item:
               - var field (see example declare-var.xml)
               - or view item local var name (see the correspond example)
-              Note: view item local var name INSIDE a for-loop is not support (see example for-loop.xml) -->
-        <txt text="'mode 1'" x="100" type="DYNAMIC" this.setTextFormat="fmt1" />
+              Note: view item local var name INSIDE a for-loop is not support (see example for-loop.xml).
+            + declare changes for multiple view items by <in> node -->
+        <in var="txt1,txt2" y="100" type="DYNAMIC" this.setTextFormat="fmt1" />
+        <txt1 text="'txt1 in mode 1'" />
+        <txt2 text="'txt2 in mode 1'" />
         <bmp1 scaleX="0.5" scaleY="0.5" />
     </mode.m1>
     <mode.m2>
-        <txt text="'mode 2'" x="100" type="INPUT" defaultTextFormat="fmt2" this.setTextFormat="fmt2" />
+        <in var="txt1,txt2" y="0" type="INPUT" defaultTextFormat="fmt2" this.setTextFormat="fmt2" />
+        <txt1 text="'txt1 in mode 2'" />
+        <txt2 text="'txt2 in mode 2'" />
         <bmp1 scaleX="1" scaleY="1" />
     </mode.m2>
 </UI>
