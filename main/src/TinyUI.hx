@@ -329,6 +329,26 @@ class TinyUI {
     /** return true if node has name startsWith "mode." */
     static inline function isModeNode(node: Xml) return node.nodeName.startsWith("mode.");
 
+    /** extract mode name from node. This method NOT check `node` isModeNode */
+    static inline function getModeName(node: Xml) return node.nodeName.substr(5); //"mode.".length == 5
+    
+    /**push `public static inline var UI_$modeName: Int = ${auto_inc value - start at 1}`
+     * for all modeName found in `xml` into buildingField */
+    function pushUIModeFields(xml: Xml) {
+        function toField(mode: String, value: Int): Field {
+            return {
+                pos: xmlPos,
+                name: 'UI_$mode',
+                access: [APublic, AStatic, AInline],
+                kind: FVar(macro: Int, Context.parse(Std.string(value), xmlPos))
+            }
+        }
+        var v = 1;
+        for (node in xml)
+            if (node.nodeType == Element && isModeNode(node))
+                buildingFields.push(toField(getModeName(node), v++));
+    }
+    
     /**Generate code for view mode feature:
      * @see example modes.xml & the generated code for more detail.
      * @param xml The view (root) node
@@ -348,6 +368,8 @@ class TinyUI {
         //  <var2 attrs>..</in>
         //</mode.xx>
         function replaceShortcutNode(node: Xml) {
+            if (! isModeNode(node)) return;
+            
             for (child in node.elements()) {
                 if (child.nodeName == "in") {
                     node.removeChild(child);
@@ -359,9 +381,7 @@ class TinyUI {
         }
         
         //replaceShortcutNode for all mode nodes 
-        for (node in xml.elements())
-            if (isModeNode(node))
-                replaceShortcutNode(node);
+        for (node in xml.elements()) replaceShortcutNode(node);
         
         //find ViewItem node has name == varName or "#" + varName
         inline function viewItemByVar(varName: String): Null<Xml>
@@ -372,32 +392,30 @@ class TinyUI {
                 }
             );
         
-        //public var uiMode(default, set): String;
+        pushUIModeFields(xml);
+        
+        //public var uiMode(default, set): Int;
         buildingFields.push({
                             pos    : xmlPos,
                             name   : "uiMode",
-                            access : [APublic], //TODO support doc?
-                            kind   : FProp("default", "set", TPath({
-                                name   : "String",
-                                pack   : []
-                            }))
+                            access : [APublic],
+                            kind   : FProp("default", "set", macro: Int)
                         });
         
-        //var _set_uiMode: String -> Void;
+        //var _set_uiMode: Int -> Void;
         buildingFields.push({
                             pos    : xmlPos,
                             name   : "_set_uiMode",
                             kind   : FVar(TFunction(
-                                [TPath({name: "String", pack: []})],
-                                TPath({name: "Void", pack: []})
-                            ))
+                                [macro: Int],
+                                macro: Void))
                         });
         
         //generate dummy function to extract expressions
         var dummy : Expr = Context.parse(
-            "function (mode: String): String {" +
+            "function (mode: Int): Int {" +
             "  if (_set_uiMode == null) {" +
-            "    throw new openfl.errors.Error('Warning: Can not set `uiMode = \"' + mode +'\"` before calling `initUI`');" +
+            "    throw new openfl.errors.Error('Warning: Can not set `uiMode = ' + mode +'` before calling `initUI`');" +
             "  }" +
             "  if (mode != uiMode) {" +
             "    _set_uiMode(mode);" +
@@ -423,17 +441,17 @@ class TinyUI {
         });
                         
         //add modes code to an inner function (in initUI) and set _set_uiMode = that function
-        var code = "this._set_uiMode = function(uiNewMode: String) { switch(uiNewMode) {";
+        var code = "this._set_uiMode = function(uiNewMode: Int) { switch(uiNewMode) {";
         var defaultMode: String = null;
         for (node in xml.elements()) {
-            if (! node.nodeName.startsWith("mode.")) {
+            if (! isModeNode(node)) {
                 continue;
             }
-            var modeName = node.nodeName.substr(5); //"mode.".length == 5
+            var modeName = getModeName(node);
             if (node.get("default") == "true") {
                 defaultMode = modeName;
             }
-            code += 'case "$modeName":';
+            code += 'case UI_$modeName:';
             
             for (child in node.elements()) {
                 switch(child.nodeName) {
@@ -462,9 +480,9 @@ class TinyUI {
             }
         }
         
-        code += "default: throw new openfl.errors.ArgumentError('This TinyUI view do not have mode \"' + uiNewMode + '\"');}}";
+        code += "default: throw new openfl.errors.ArgumentError('This TinyUI view do not have mode <' + uiNewMode + '>');}}";
         if (defaultMode != null) {
-            code += 'this.uiMode = "$defaultMode";';
+            code += 'this.uiMode = UI_$defaultMode;';
         }
 
         return code;

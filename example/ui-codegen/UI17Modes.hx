@@ -11,11 +11,13 @@ using com.sandinh.ui.BitmapTools;
 class UI17Modes extends Sprite {
 	//++++++++++ code gen by tinyui ++++++++++//
 	public var txt1 : openfl.text.TextField;
-	public var uiMode(default, set) : String
-	var _set_uiMode : String -> Void;
-	function set_uiMode(mode:String):String {
+	public static inline var UIMode_M1 : Int = 1;
+	public static inline var UIMode_M2 : Int = 2;
+	public var uiMode(default, set) : Int
+	var _set_uiMode : Int -> Void;
+	function set_uiMode(mode:Int):Int {
 		if (_set_uiMode == null) {
-			throw new openfl.errors.Error("Warning: Can not set `uiMode = \"" + mode + "\"` before calling `initUI`");
+			throw new openfl.errors.Error("Warning: Can not set `uiMode = " + mode + "` before calling `initUI`");
 		};
 		if (mode != uiMode) {
 			_set_uiMode(mode);
@@ -40,9 +42,9 @@ class UI17Modes extends Sprite {
 		txt2.borderColor = 0xFF0000;
 		txt2.x = bmp1.width + 200;
 		this.addChild(txt2);
-		this._set_uiMode = function(uiNewMode:String) {
+		this._set_uiMode = function(uiNewMode:Int) {
 			switch (uiNewMode) {
-				case "m1":{
+				case UIMode_M1:{
 					this.txt1.text = "txt1 in mode 1";
 					txt2.text = "txt2 in mode 1";
 					bmp1.scaleX = 0.5;
@@ -54,7 +56,7 @@ class UI17Modes extends Sprite {
 					txt2.y = 100;
 					txt2.setTextFormat(fmt1);
 				};
-				case "m2":{
+				case UIMode_M2:{
 					this.txt1.text = "txt1 in mode 2";
 					txt2.text = "txt2 in mode 2";
 					bmp1.scaleX = 1;
@@ -69,11 +71,11 @@ class UI17Modes extends Sprite {
 					txt2.setTextFormat(fmt2);
 				};
 				default:{
-					throw new openfl.errors.ArgumentError("This TinyUI view do not have mode \"" + uiNewMode + "\"");
+					throw new openfl.errors.ArgumentError("This TinyUI view do not have mode <" + uiNewMode + ">");
 				};
 			};
 		};
-		this.uiMode = "m1";
+		this.uiMode = UIMode_M1;
 	}
 	//---------- code gen by tinyui ----------//
 
@@ -83,6 +85,6 @@ class UI17Modes extends Sprite {
         this.addEventListener(MouseEvent.CLICK, onClick);
     }
     function onClick(e: MouseEvent) {
-        this.uiMode = this.uiMode == "m1"? "m2" : "m1";
+        this.uiMode = this.uiMode == UIMode_M1? UIMode_M2 : UIMode_M1;
     }
 }

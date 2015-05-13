@@ -30,7 +30,7 @@
         Note: _set_uiMode is a closure inside initUI, so in mode nodes, we can reference to
             + all local variables that is set in UI (see example local-var.xml)
             + all initUI arguments (see example initUI-args.xml)-->
-    <mode.m1 default="true">
+    <mode.M1 default="true">
         <!--direct children of mode node can:
             + set properties for view: <this vars/>
             + call method (or extension method) of view: <this. methods /> or <this.fnName ..>
@@ -43,11 +43,11 @@
         <txt1 text="'txt1 in mode 1'" />
         <txt2 text="'txt2 in mode 1'" />
         <bmp1 scaleX="0.5" scaleY="0.5" />
-    </mode.m1>
-    <mode.m2>
+    </mode.M1>
+    <mode.M2>
         <in var="txt1,txt2" y="0" type="INPUT" defaultTextFormat="fmt2" this.setTextFormat="fmt2" />
         <txt1 text="'txt1 in mode 2'" />
         <txt2 text="'txt2 in mode 2'" />
         <bmp1 scaleX="1" scaleY="1" />
-    </mode.m2>
+    </mode.M2>
 </UI>
