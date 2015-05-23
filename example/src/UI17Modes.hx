@@ -15,6 +15,6 @@ class UI17Modes extends Sprite {
         this.addEventListener(MouseEvent.CLICK, onClick);
     }
     function onClick(e: MouseEvent) {
-        this.uiMode = this.uiMode == UIMode_M1? UIMode_M2 : UIMode_M1;
+        this.uiMode = this.uiMode == UI_M1? UI_M2 : UI_M1;
     }
 }

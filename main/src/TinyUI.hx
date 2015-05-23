@@ -332,7 +332,7 @@ class TinyUI {
     /** extract mode name from node. This method NOT check `node` isModeNode */
     static inline function getModeName(node: Xml) return node.nodeName.substr(5); //"mode.".length == 5
     
-    /**push `public static inline var UI_$modeName: Int = ${auto_inc value - start at 1}`
+    /**push `public static inline var UI_$modeName: Int = ${auto_inc value - start at 0}`
      * for all modeName found in `xml` into buildingField */
     function pushUIModeFields(xml: Xml) {
         function toField(mode: String, value: Int): Field {
@@ -343,7 +343,7 @@ class TinyUI {
                 kind: FVar(macro: Int, Context.parse(Std.string(value), xmlPos))
             }
         }
-        var v = 1;
+        var v = 0;
         for (node in xml)
             if (node.nodeType == Element && isModeNode(node))
                 buildingFields.push(toField(getModeName(node), v++));
@@ -393,14 +393,17 @@ class TinyUI {
             );
         
         pushUIModeFields(xml);
-        
-        //public var uiMode(default, set): Int;
+
+        //public var uiMode(default, set): Int = -1;
         buildingFields.push({
-                            pos    : xmlPos,
-                            name   : "uiMode",
-                            access : [APublic],
-                            kind   : FProp("default", "set", macro: Int)
-                        });
+            pos : xmlPos,
+            name : "uiMode",
+            access : [APublic],
+            kind : FProp("default", "set", macro: Int, {
+                expr: EConst(CInt("-1")),
+                pos: xmlPos
+            })
+        });
         
         //var _set_uiMode: Int -> Void;
         buildingFields.push({

@@ -11,9 +11,9 @@ using com.sandinh.ui.BitmapTools;
 class UI17Modes extends Sprite {
 	//++++++++++ code gen by tinyui ++++++++++//
 	public var txt1 : openfl.text.TextField;
-	public static inline var UIMode_M1 : Int = 1;
-	public static inline var UIMode_M2 : Int = 2;
-	public var uiMode(default, set) : Int
+	public static inline var UI_M1 : Int = 0;
+	public static inline var UI_M2 : Int = 1;
+	public var uiMode(default, set) : Int = -1
 	var _set_uiMode : Int -> Void;
 	function set_uiMode(mode:Int):Int {
 		if (_set_uiMode == null) {
@@ -44,7 +44,7 @@ class UI17Modes extends Sprite {
 		this.addChild(txt2);
 		this._set_uiMode = function(uiNewMode:Int) {
 			switch (uiNewMode) {
-				case UIMode_M1:{
+				case UI_M1:{
 					this.txt1.text = "txt1 in mode 1";
 					txt2.text = "txt2 in mode 1";
 					bmp1.scaleX = 0.5;
@@ -56,7 +56,7 @@ class UI17Modes extends Sprite {
 					txt2.y = 100;
 					txt2.setTextFormat(fmt1);
 				};
-				case UIMode_M2:{
+				case UI_M2:{
 					this.txt1.text = "txt1 in mode 2";
 					txt2.text = "txt2 in mode 2";
 					bmp1.scaleX = 1;
@@ -75,7 +75,7 @@ class UI17Modes extends Sprite {
 				};
 			};
 		};
-		this.uiMode = UIMode_M1;
+		this.uiMode = UI_M1;
 	}
 	//---------- code gen by tinyui ----------//
 
@@ -85,6 +85,6 @@ class UI17Modes extends Sprite {
         this.addEventListener(MouseEvent.CLICK, onClick);
     }
     function onClick(e: MouseEvent) {
-        this.uiMode = this.uiMode == UIMode_M1? UIMode_M2 : UIMode_M1;
+        this.uiMode = this.uiMode == UI_M1? UI_M2 : UI_M1;
     }
 }
