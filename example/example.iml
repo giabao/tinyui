@@ -16,17 +16,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="main" />
     <orderEntry type="module-library">
-      <library name="haxelib|C:/HaxeToolkit/haxe/lib/openfl/3,0,3">
-        <CLASSES>
-          <root url="file://$MODULE_DIR$/../../../openfl/3,0,3" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="file://$MODULE_DIR$/../../../openfl/3,0,3" />
-        </SOURCES>
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
       <library name="haxelib|C:/HaxeToolkit/haxe/lib/tinyui/git/main/src">
         <CLASSES>
           <root url="file://$MODULE_DIR$/../main/src" />
@@ -60,13 +49,24 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="haxelib|C:/HaxeToolkit/haxe/lib/actuate/1,8,4">
+      <library name="haxelib|C:/HaxeToolkit/haxe/lib/openfl/3,0,6">
         <CLASSES>
-          <root url="file://$MODULE_DIR$/../../../actuate/1,8,4" />
+          <root url="file://$MODULE_DIR$/../../../openfl/3,0,6" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="file://$MODULE_DIR$/../../../actuate/1,8,4" />
+          <root url="file://$MODULE_DIR$/../../../openfl/3,0,6" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="haxelib|C:/HaxeToolkit/haxe/lib/actuate/1,8,5">
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/../../../actuate/1,8,5" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/../../../actuate/1,8,5" />
         </SOURCES>
       </library>
     </orderEntry>
