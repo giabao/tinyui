@@ -13,7 +13,7 @@ class UI17Modes extends Sprite {
 	public var txt1 : openfl.text.TextField;
 	public static inline var UI_M1 : Int = 0;
 	public static inline var UI_M2 : Int = 1;
-	public var uiMode(default, set) : Int = -1
+	public var uiMode(default, set) : Int = -1;
 	var _set_uiMode : Int -> Void;
 	function set_uiMode(mode:Int):Int {
 		if (_set_uiMode == null) {

@@ -560,7 +560,7 @@ class TinyUI {
         var code = fields.map(function(f: Field) {
             var s = new Printer().printField(f);
             return switch(f.kind) {
-                case FVar(_): s + ";";
+                case FVar(_) | FProp(_): s + ";";
                 case _: s;
             }
         }).join("\n");
