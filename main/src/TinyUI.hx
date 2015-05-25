@@ -79,22 +79,12 @@ class TinyUI {
      *  <Bitmap new="new Bitmap(Assets.getBitmapData('/some_img.png'))" />
      *  <Bitmap new=":Assets.getBitmapData('/some_img.png')" /> */
 	static function getNewExpr(node: Xml, tpe: Type): String {
-        function className(): String {
-            var cls: ClassType = tpe.getClass();
-            return cls.pack.toDotPath(cls.name);
-        }
+        var expr = node.get("new");
+        expr = expr == null? ":" : expr.trim();
+        return expr.charAt(0) != ':'? expr :
+            "new " + tpe.clsFqdn() + "(" + expr.substr(1) + ")";
+    }
 
-		var newExpr: String = node.get("new");
-		if (newExpr == null) {
-			return "new " + className() + "()";
-		} 
-		newExpr = newExpr.trim();
-		if (newExpr.charAt(0) == ':') {
-            return "new " + className() + "(" + newExpr.substr(1) + ")";
-		}
-		return newExpr;
-	}
-    
 	/** extract variables from xml node then convert to haxe code:
 	  * 1. attributes "new", "var", "function" is ignore.
 	  * 2. attribute: var.name[:Type]="expresion"
@@ -630,6 +620,13 @@ class Tools {
             case TAbstract(t, _): t.get();
             case _: null;
         }
+    }
+
+    /**return the full pack + name of the Class `tpe`
+     * tpe must represent a class. see haxe.macro.TypeTools.getClass */
+    public static function clsFqdn(tpe: Type): String {
+        var cls: ClassType = tpe.getClass();
+        return cls.pack.toDotPath(cls.name);
     }
     
     public static function cloneXml(node: Xml, newName: String = null, excludeAttr: String = null): Xml {
