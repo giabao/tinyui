@@ -1,3 +1,4 @@
 example/bin/
 .idea/sbt.xml
 .idea/workspace.xml
+out/
