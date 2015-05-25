@@ -1,5 +1,13 @@
 <UI>
-    <!--tinyui do not support nesting view items.
-    The UI has nested items should be split into a dedicated view class -->
+    <!-- The UI has nested items should be split into a dedicated view class -->
     <UI06ViewItem />
+    <!--For simple nested items, you can grouped its in <in.$groupClassName/> nodes.-->
+    <in.Sprite var="spr1" x="5">
+        <TextField var="#txt1" text="'nested item 1'" />
+        <TextField text="txt1.text" y="40" />
+    </in.Sprite>
+    <!--if $groupClassName is omitted then we will use DisplayObjectContainer -->
+    <in. x="spr1.x + 200">
+        <TextField text="'nested item 2'" />
+    </in.>
 </UI>

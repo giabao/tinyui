@@ -217,7 +217,7 @@ class TinyUI {
     /**Process node that declare a view item.
      * each View Item node has `var` attribute will be generated to a haxe field.
      * @return code */
-    function processViewItemNode(node: Xml, className: String): String {
+    function processViewItemNode(node: Xml, className: String, varName: String): String {
         var code = "";
         
         //child variable name or field name of view class
@@ -225,7 +225,7 @@ class TinyUI {
         var tpe = Context.getType(className);
         var newExpr = getNewExpr(node, tpe);
         //should we declare an class instance var field for this xml node
-        if (childVarName != null && !childVarName.startsWith("#")) {
+        if (varName == "this" && childVarName != null && !childVarName.startsWith("#")) {
             var baseType = tpe.baseType();
             if (baseType == null) {
                 Context.error('Can not find type $className', xmlPos);
@@ -248,9 +248,10 @@ class TinyUI {
             code += 'var $childVarName = $newExpr;';
         }
 
-        code += processNode(node, childVarName, NodeCtx.Field(tpe));
+        var nextCtx = node.nodeName.startsWith("in.")? NodeCtx.ViewItem : NodeCtx.Field(tpe);
+        code += processNode(node, childVarName, nextCtx);
 
-        return code + 'this.addChild($childVarName);';
+        return code + '$varName.addChild($childVarName);';
     }
     
     /** loop throught xml node recursively and generate haxe code for initUI function.
@@ -292,9 +293,14 @@ class TinyUI {
                 case [modeName, NodeCtx.ViewItem] if (modeName.startsWith("mode.")):
                     //will be process later in `genUIMode` method
                     
+                case [group, NodeCtx.ViewItem] if (group.startsWith("in.")):
+                    var className = group.substr(3); //"in.".length == 3
+                    if (className == "") className = "openfl.display.DisplayObjectContainer";
+                    code += processViewItemNode(child, className, varName);
+
 				//if `node` is root node (map to View class) then `child` is className of a View Item
 				case [className, NodeCtx.ViewItem]:
-                    code += processViewItemNode(child, className);
+                    code += processViewItemNode(child, className, varName);
                     
                 case [fieldName, NodeCtx.Field(tpe)]:
                     //FIXME if tpe is not a ClassType?
@@ -647,6 +653,10 @@ private class LocalVarNameGen {
 	public function new() { }
 	
 	public function next(className: String): String {
+        var i = className.lastIndexOf(".");
+        //take only real class name, not fqdn
+        className = i == -1? className : className.substr(i + 1);
+
 		var i = localVarNum.get(className);
 		if (i == null) {
 			i = 0;
@@ -656,17 +666,16 @@ private class LocalVarNameGen {
 	}
 }
 
-/**
- * Context of xml node in the ui (.xml) file.
- * + ViewItem: is for direct child nodes of root UI node.
- *   ex: the Bitmap node in: <UI><Bitmap ../></UI>
- *   Here, nodeName is the class name.
- * + Field(tpe): is for field node that declare a field in Type `tpe`.
- *   ex: the defaultTextFormat node in: <UI><TextField><defaultTextFormat .. /></TextField></UI>
- *   Here, tpe is openfl.text.TextField
- */
+/** Context of xml node in the ui (.xml) file */
 private enum NodeCtx {
+    /** ViewItem is for direct child nodes of View Container (root node) or View Group (<in.$groupClassName> node).
+      * ex: the Bitmap node in: <UI><Bitmap ../></UI>. Here, nodeName is the class name.
+      * or: <UI><in.Sprite><Bitmap ../></in.Sprite></UI> */
     ViewItem;
+    
+    /** Field(tpe): is for field node that declare a field of Type `tpe`.
+      * ex: the defaultTextFormat node in: <UI><TextField><defaultTextFormat .. /></TextField></UI>
+      * Here, nodeName is the property name and tpe is TextField */
     Field(tpe: Type);
 }
 
