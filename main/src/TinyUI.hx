@@ -215,13 +215,13 @@ class TinyUI {
     }
     
     /**Process node that declare a view item.
-     * each View Item node has `var` attribute will be generated to a haxa field.
+     * each View Item node has `var` attribute will be generated to a haxe field.
      * @return code */
     function processViewItemNode(node: Xml, className: String): String {
         var code = "";
         
         //child variable name or field name of view class
-        var childVarName: String = node.get("var");
+        var childVarName = node.get("var");
         var tpe = Context.getType(className);
         var newExpr = getNewExpr(node, tpe);
         //should we declare an class instance var field for this xml node
