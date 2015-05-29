@@ -3,12 +3,14 @@ _TinyUI Is Not Yet UI_
 
 A tiny UI macro for injecting ui items declared in a xml file into a haxe class
 
+[Examples](http://tinyui.sandinh.com)
+
 ## features
 1. Tiny. Only one @:build macro file
 2. Cross platform
 3. Very simple: Only translate UI declared in xml into haxe code. Not use Reflect
 4. Transparent accessing code-from-ui & ui-from-code
-5. Very powerful - see [example](example)
+5. Very powerful - see [example](http://tinyui.sandinh.com)
 6. Very stable
   - because its so simple (only translate xml view into simple haxe code)
   - tinyui is using in several games (web, ios, android) play by millions user at http://sandinh.com 
@@ -45,7 +47,7 @@ haxelib install tinyui
     <haxeflag name="--macro" value="TinyUI.saveCodeTo('ui-codegen')"/>
     ```
 
-4. see [example](example)
+4. see [example](http://tinyui.sandinh.com)
 
 ### Changelogs
 see [CHANGES.md](CHANGES.md)
