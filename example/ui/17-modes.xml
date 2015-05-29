@@ -17,9 +17,9 @@
             }
         And init _set_uiMode at the end of initUI method:
             this._set_uiMode = function(uiNewMode:String) {
-			  switch (uiNewMode) {
-				case "modeName1": ..
-				case "modeName2": ..
+              switch (uiNewMode) {
+                case "modeName1": ..
+                case "modeName2": ..
                 ..
                 default: throw ..
               }

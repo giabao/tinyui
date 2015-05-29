@@ -17,7 +17,7 @@
        Also note: We can NOT use declared order of attributes because Xml.attributes() will not preserved the order.-->
         <this.setTextFormat format.0="largeFmt" beginIndex.1="0" endIndex.2="3" />
             
-		<this.setTextFormat>
+        <this.setTextFormat>
             <TextFormat font="'Tahoma'" size="13" color="0xFF0000" bold="true" />
             <Int new="3"/>
             <this endIndex="7" />
@@ -25,5 +25,5 @@
 
         <!--Note the space after node name :D-->
         <this. setTextFormat="largeFmt, 7, 10" />
-	</TextField>
+    </TextField>
 </UI>

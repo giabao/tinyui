@@ -1,7 +1,7 @@
 <UI>
-	<TextField>
-		<defaultTextFormat font="'Tahoma'" size="16" bold="true" />
+    <TextField>
+        <defaultTextFormat font="'Tahoma'" size="16" bold="true" />
         <!--need set text after setting defaultTextFormat-->
-		<this text="'Hi TinyUI!'" />
-	</TextField>
+        <this text="'Hi TinyUI!'" />
+    </TextField>
 </UI>
