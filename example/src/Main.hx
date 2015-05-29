@@ -11,7 +11,7 @@ import UI08ViewItemLocalVarName;
 import UI09ItemFieldNode;
 import UI10FunctionNode;
 import UI11NewExpression;
-import UI12ExtMethod;
+import UI12UsingExtensionMethod;
 import UI13NestedItems;
 import UI14ForLoop;
 import UI15Layout;
@@ -25,8 +25,8 @@ class Main extends Sprite {
 
 //        addChild(new UI15Layout());
 //        addChild(new UI16Tooltip());
-//        addChild(new UI12ExtMethod());
         addChild(new UI17Modes());
+//        addChild(new UI12UsingExtensionMethod());
     }
 
     function ex1() {
