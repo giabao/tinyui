@@ -4,8 +4,8 @@ import openfl.display.Sprite;
 class UI02FieldAttr extends Sprite {
 	//++++++++++ code gen by tinyui ++++++++++//
 	public function initUI() {
-		this.width = 100;
 		this.x = 1 + 2;
+		this.width = 100;
 	}
 	//---------- code gen by tinyui ----------//
 

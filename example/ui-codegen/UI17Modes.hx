@@ -26,16 +26,16 @@ class UI17Modes extends Sprite {
 		return mode;
 	}
 	public function initUI() {
-		var fmt2 = new TextFormat("Tahoma", 12, 0xFF0000);
 		var fmt1 = new TextFormat("Tahoma", 22, 0xFFFF00);
+		var fmt2 = new TextFormat("Tahoma", 12, 0xFF0000);
 		var bmp1 = new flash.display.Bitmap();
 		bmp1.src("img/sd.jpg");
 		this.addChild(bmp1);
 		this.txt1 = new flash.text.TextField();
-		this.txt1.autoSize = TextFieldAutoSize.LEFT;
 		this.txt1.border = true;
 		this.txt1.borderColor = 0xFF0000;
 		this.txt1.x = bmp1.width;
+		this.txt1.autoSize = TextFieldAutoSize.LEFT;
 		this.addChild(this.txt1);
 		var txt2 = new flash.text.TextField();
 		txt2.border = true;
@@ -49,11 +49,11 @@ class UI17Modes extends Sprite {
 					txt2.text = "txt2 in mode 1";
 					bmp1.scaleX = 0.5;
 					bmp1.scaleY = 0.5;
-					this.txt1.type = DYNAMIC;
 					this.txt1.y = 100;
+					this.txt1.type = DYNAMIC;
 					this.txt1.setTextFormat(fmt1);
-					txt2.type = DYNAMIC;
 					txt2.y = 100;
+					txt2.type = DYNAMIC;
 					txt2.setTextFormat(fmt1);
 				};
 				case UI_M2:{
@@ -61,13 +61,13 @@ class UI17Modes extends Sprite {
 					txt2.text = "txt2 in mode 2";
 					bmp1.scaleX = 1;
 					bmp1.scaleY = 1;
-					this.txt1.defaultTextFormat = fmt2;
-					this.txt1.type = INPUT;
 					this.txt1.y = 0;
+					this.txt1.type = INPUT;
+					this.txt1.defaultTextFormat = fmt2;
 					this.txt1.setTextFormat(fmt2);
-					txt2.defaultTextFormat = fmt2;
-					txt2.type = INPUT;
 					txt2.y = 0;
+					txt2.type = INPUT;
+					txt2.defaultTextFormat = fmt2;
 					txt2.setTextFormat(fmt2);
 				};
 				default:{

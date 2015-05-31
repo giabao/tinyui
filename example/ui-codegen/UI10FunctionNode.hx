@@ -16,10 +16,10 @@ class UI10FunctionNode extends Sprite {
 		var largeFmt = new TextFormat("Tahoma", 22, 0xFF0000);
 		__uiTextField1.setTextFormat(largeFmt, 0, 3);
 		var __uiTextFormat1 = new flash.text.TextFormat();
-		__uiTextFormat1.bold = true;
+		__uiTextFormat1.font = "Tahoma";
 		__uiTextFormat1.size = 13;
 		__uiTextFormat1.color = 0xFF0000;
-		__uiTextFormat1.font = "Tahoma";
+		__uiTextFormat1.bold = true;
 		var __uiInt1 = 3;
 		__uiTextField1.setTextFormat(__uiTextFormat1, __uiInt1, 7);
 		__uiTextField1.setTextFormat(largeFmt, 7, 10);

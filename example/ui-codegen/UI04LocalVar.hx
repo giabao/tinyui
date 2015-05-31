@@ -4,8 +4,8 @@ import openfl.display.Sprite;
 class UI04LocalVar extends Sprite {
 	//++++++++++ code gen by tinyui ++++++++++//
 	public function initUI() {
-		var baz:Int = 3;
 		var foo = 1 + 2;
+		var baz:Int = 3;
 		this.x = foo + baz;
 	}
 	//---------- code gen by tinyui ----------//

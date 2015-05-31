@@ -8,6 +8,7 @@ import haxe.macro.Expr;
 import haxe.ds.StringMap;
 import sys.io.File;
 import sys.FileSystem;
+import _tinyui.Xml;
 
 using Lambda;
 using StringTools;

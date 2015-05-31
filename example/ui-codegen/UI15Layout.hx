@@ -30,8 +30,8 @@ class UI15Layout extends Sprite {
 		__uiTextField1.text = "Hi Layout2!";
 		__uiTextField1.width = 200;
 		__uiTextField1.setTextFormat(largeFmt);
-		__uiTextField1.alignWith(txt1, LEFT);
 		__uiTextField1.below(txt1);
+		__uiTextField1.alignWith(txt1, LEFT);
 		this.addChild(__uiTextField1);
 	}
 	//---------- code gen by tinyui ----------//
