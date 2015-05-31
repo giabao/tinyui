@@ -19,7 +19,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
-package haxe.xml;
+//this module is copy from std 3.2.0's haxe.xml, ONLY re-package so that the `Xml` class referenced here is _tinyui.Xml
+package _tinyui.haxe.xml;
 
 using StringTools;
 

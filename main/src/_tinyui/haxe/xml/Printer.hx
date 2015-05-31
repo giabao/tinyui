@@ -26,7 +26,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package haxe.xml;
+//this module is copy from std 3.2.0's haxe.xml, ONLY re-package so that the `Xml` class referenced here is _tinyui.Xml
+package _tinyui.haxe.xml;
 
 class Printer {
 

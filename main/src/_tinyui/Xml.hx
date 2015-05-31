@@ -20,6 +20,10 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+package _tinyui;
+import _tinyui.haxe.xml.Parser;
+import _tinyui.haxe.xml.Printer;
+
 @:enum abstract XmlType(Int) {
 	var Element = 0;
 	var PCData = 1;
@@ -30,6 +34,14 @@
 	var Document = 6;
 }
 
+/** This class is copy from std 3.2.0's Xml, add `var attributeKeys:List<String>`
+  * so the attributes in xml string is parsed with order preserving.
+  * Ex: Xml.parse('<UI x="1" y="x+1" />').attributes() maybe ["y", "x"] or ["x", "y"]
+  *  But _tinyui.Xml.parse('<UI x="1" y="x+1" />').attributes() will always be ["x", "y"]
+  * Note that, according to the xml specification (section 3.1):
+  * ```
+  * the order of attribute specifications in a start-tag or empty-element tag is not significant
+  * ```*/
 class Xml {
 
 	static public var Element(default,null) = XmlType.Element;
@@ -41,7 +53,7 @@ class Xml {
 	static public var Document(default,null) = XmlType.Document;
 
 	static public function parse( str : String ) : Xml {
-		return haxe.xml.Parser.parse(str);
+		return Parser.parse(str);
 	}
 
 	/**
@@ -69,6 +81,7 @@ class Xml {
 
 	var children:Array<Xml>;
 	var attributeMap:Map<String, String>;
+	var attributeKeys:List<String>;
 
 	inline function get_nodeName() {
 		if (nodeType != Element) {
@@ -179,6 +192,8 @@ class Xml {
 			throw 'Bad node type, expected Element but found $nodeType';
 		}
 		attributeMap.set(att, value);
+		attributeKeys.remove(att);
+		attributeKeys.add(att);
 	}
 
 	/**
@@ -190,6 +205,7 @@ class Xml {
 			throw 'Bad node type, expected Element but found $nodeType';
 		}
 		attributeMap.remove(att);
+		attributeKeys.remove(att);
 	}
 
 	/**
@@ -210,7 +226,7 @@ class Xml {
 		if (nodeType != Element) {
 			throw 'Bad node type, expected Element but found $nodeType';
 		}
-		return attributeMap.keys();
+		return attributeKeys.iterator();
 	}
 
 	/**
@@ -310,13 +326,14 @@ class Xml {
 		Returns a String representation of the Xml node.
 	**/
 	public inline function toString() : String {
-		return haxe.xml.Printer.print(this);
+		return Printer.print(this);
 	}
 
 	function new(nodeType:XmlType) {
 		this.nodeType = nodeType;
 		children = [];
 		attributeMap = new Map();
+		attributeKeys = new List<String>();
 	}
 
 	inline function ensureElementType() {
