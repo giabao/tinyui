@@ -30,13 +30,7 @@ class TinyUI {
     /** Inject fields declared in `xmlFile` and generate `initUI()` function for the macro building class.
       * See test/some-view.xml & test/SomeView.hx for usage. */
     macro public static function build(xmlFile: String): Array<Field> {
-        var xml: Xml;
-        try {
-            xml = Xml.parse(File.getContent(xmlFile)).firstElement();
-        } catch(e: Dynamic) {
-            Context.fatalError('Can NOT parse $xmlFile, $e', Context.currentPos());
-        }
-
+        var xml = Tools.parseXml(xmlFile);
         try {
             var tinyUI = new TinyUI(Context.makePosition( { min:0, max:0, file:xmlFile } ));
             return tinyUI.doBuild(xml);
@@ -643,6 +637,14 @@ class Tools {
                 ret.set(a, node.get(a));
         node.iter(function(child) ret.addChild(cloneXml(child)));
         return ret;
+    }
+
+    public static function parseXml(xmlFile: String): Xml {
+        return try {
+             Xml.parse(File.getContent(xmlFile)).firstElement();
+        } catch(e: Dynamic) {
+            Context.fatalError('Can NOT parse $xmlFile, $e', Context.currentPos());
+        }
     }
 }
 
