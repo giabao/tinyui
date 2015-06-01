@@ -134,25 +134,8 @@ class TinyUI {
         return code;
     }
     
-    /** We pass arguments to the function by adding attributes and/or child nodes to the this.fnName node.
-     * Note that, when declare >1 attributes, we need add `.number` to the attribute names to ordering the arguments.
-     * This method extract the number (if any) from attribute name.
-     * Also note: We can NOT use declared order of attributes because Xml.attributes() will not preserved the order. */
-    static function dotOrder(s: String): Null<Int> {
-        var i = s.indexOf(".");
-        return i == -1? null : Std.parseInt(s.substr(i + 1));
-    }
-    function getFnNodeArgs(node: Xml): Array<String> {
-        var args: Array<String> = node.attributes().array();
-        if (args.length > 1) {
-            for (a in args) {
-                if (dotOrder(a) == null) {
-                    Context.error('argument $a when calling function in `this.fnName` node - which have >1 attributes - is not in format argName.order', xmlPos);
-                }
-            }
-            args.sort(function(a, b) return dotOrder(a) - dotOrder(b));
-        }
-        return args.map(node.get);
+    inline function getFnNodeArgs(node: Xml): Array<String> {
+        return node.attributes().array().map(node.get);
     }
     
     /**Process <this.> node
