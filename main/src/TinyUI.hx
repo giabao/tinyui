@@ -92,7 +92,6 @@ class TinyUI {
             return "";
         }
         var code = "";
-        var fnCallCount = 0;
         for (attr in node.attributes()) {
             switch(attr) {
                 //"new" attribute is processed in `processNode` method.
@@ -105,13 +104,6 @@ class TinyUI {
                     fnName = fnName.substr(5); //"this.".length == 5
                     if (fnName == "") {
                         Context.error('invalid "this." attribute in ${node.nodeName} node', xmlPos);
-                    }
-                    
-                    fnCallCount++;
-                    if (fnCallCount == 2) {
-                        var msg = 'TinyUI found multi function calls (syntax: "this.fnName") in ${node.nodeName} node. ' +
-                            "Note that the order of those callings is un-specified!";
-                        Context.warning(msg, xmlPos);
                     }
                     
                     var value = node.get(attr);
