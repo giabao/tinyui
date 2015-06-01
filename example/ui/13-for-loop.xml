@@ -1,0 +1,8 @@
+<UI>
+    <for i="1...4">
+        <ui-TextField y="i * 25">
+            <defaultTextFormat color="0xFF0000" />
+            <this text="'some text'" />
+        </ui-TextField>
+    </for>
+</UI>

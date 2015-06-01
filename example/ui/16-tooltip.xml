@@ -1,8 +1,0 @@
-<UI>
-    <TextField text="'the target'" border="true" borderColor="0xFF0000"
-               this.tooltip="'An floating tooltip'">
-        <this.setTextFormat>
-            <TextFormat color="0xFFFFFF" />
-        </this.setTextFormat>
-    </TextField>
-</UI>

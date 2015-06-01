@@ -11,6 +11,7 @@ import sys.FileSystem;
 import _tinyui.Xml;
 
 using Lambda;
+using com.sandinh.core.LambdaEx;
 using StringTools;
 using TinyUI.Tools;
 using haxe.macro.TypeTools;
@@ -55,7 +56,7 @@ class TinyUI {
     /** See build(String) */
     function doBuild(xml: Xml): Array<Field> {        
         //code for initUI() method
-        var code = processNode(xml, "this", NodeCtx.ViewItem);
+        var code = processNode(xml, "this", Context.getLocalType());
         
         code += genUIModes(xml);
 
@@ -80,13 +81,8 @@ class TinyUI {
             "new " + tpe.clsFqdn() + "(" + expr.substr(1) + ")";
     }
 
-    /** extract variables from xml node then convert to haxe code:
-      * 1. attributes "new", "var", "function" is ignore.
-      * 2. attribute: var.name[:Type]="expresion"
-      *   convert to: var name[:Type]= expresion;
-      * 3. other attributes: foo.baz="expr"
-      *   convert to: $varName.foo.baz = expr; */
-    function attr2Haxe(node: Xml, varName: String): String {
+    /** extract variables from xml node then convert to haxe code */
+    function attr2Haxe(node: Xml, varName: String, tpe: Type): String {
         //`for` node's attributes is already processed in method `processNode`
         if (node.nodeName == "for") {
             return "";
@@ -99,52 +95,28 @@ class TinyUI {
                 //"function" attribute of root node is processed in `genInitCode` method.
                 case "new" | "var" | "function":
                     continue;
-                    
-                case fnName if (fnName.startsWith("this.")):
-                    fnName = fnName.substr(5); //"this.".length == 5
-                    if (fnName == "") {
-                        Context.error('invalid "this." attribute in ${node.nodeName} node', xmlPos);
+
+                //ex: <Button label.text="'OK'" />
+                //or: <TextField setTextFormat="myFmt,1" />
+                default:
+                    var value = node.get(attr);
+                    //check if attr is FVar
+                    var field: ClassField = tpe.getClass().findField(attr);
+                    if (field != null && field.isVar()) {
+                        code += '$varName.$attr = $value;';
+                    } else {
+                        //if attr is not FVar then we expect it is a method or an extension method
+                        code += '$varName.$attr($value);';
                     }
-                    
-                    var value = node.get(attr);
-                    code += '$varName.$fnName($value);';
-                    
-                //ex: <Item var.someVar:Float="Math.max(1+2, 4)"..>
-                //or: <Item var.someVar="1+2"..>
-                case localVarName if (localVarName.startsWith("var.")):
-                    localVarName = attr.substr(4); //"var.".length == 4
-                    var value = node.get(attr);
-                    code += 'var $localVarName = $value;';
-                    
-                //ex: <Button label.text="'OK'" />    
-                case fieldName:
-                    var value = node.get(attr);
-                    code += '$varName.$attr = $value;';
-                    
             }
         }
         return code;
     }
-    
-    inline function getFnNodeArgs(node: Xml): Array<String> {
+
+    static inline function getFnNodeArgs(node: Xml): Array<String> {
         return node.attributes().array().map(node.get);
     }
-    
-    /**Process <this.> node
-     * each attribute will be a function name, with only one argument - that is the value of attribute.
-     * ex: <Button><this. setStyle="'icon', myIcon" /></Button>
-     * children nodes are ignored.
-     * 
-     * @return code */
-    static function processNodeAsMultiFnCall(node: Xml, varName: String): String {
-        var code = "";
-        for (attr in node.attributes()) {
-            var value = node.get(attr);
-            code += '$varName.$attr($value);';
-        }
-        return code;
-    }
-    
+
     /**Process <this.functionName> node
      * ex: see http://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/fl/core/UIComponent.html#setStyle%28%29
      * <Label>
@@ -159,7 +131,7 @@ class TinyUI {
      * @return code */
     function processNodeAsOneFnCall(node: Xml, varName: String): String {
         var code = "";
-        var fnName = node.nodeName.substr(5); //"this.".length == 5
+        var fnName = node.nodeName;
         var args: Array<String> = getFnNodeArgs(node);
         
         for (child in node.elements()) {
@@ -167,16 +139,13 @@ class TinyUI {
                 case "this":
                     getFnNodeArgs(child).iter(args.push);
                     
-                case s if(s.startsWith("this.")):
-                    Context.error('Invalid node [$s] of this.$fnName node!', xmlPos);
-
                 //if `node` is `this.$fnName` node then `child` is className of a fnName's argument
                 case childClassName:
                     var childVarName = localVarNameGen.next(childClassName);
                     var tpe = Context.getType(childClassName);
                     var newExpr = getNewExpr(child, tpe);
                     code += 'var $childVarName = $newExpr;';
-                    code += processNode(child, childVarName, NodeCtx.Field(tpe));
+                    code += processNode(child, childVarName, tpe);
                     args.push(childVarName);
             }
         }
@@ -194,15 +163,16 @@ class TinyUI {
         var childVarName = node.get("var");
         var tpe = Context.getType(className);
         var newExpr = getNewExpr(node, tpe);
-        //should we declare an class instance var field for this xml node
-        if (varName == "this" && childVarName != null && !childVarName.startsWith("#")) {
+        //check if should we declare an class instance var field for this xml node
+        //ex: <Button var="this.myLocalVar" />
+        if (varName == "this" && childVarName != null && childVarName.startsWith("this.")) {
             var baseType = tpe.baseType();
             if (baseType == null) {
                 Context.error('Can not find type $className', xmlPos);
             }
             buildingFields.push({
                 pos    : xmlPos,
-                name   : childVarName,
+                name   : childVarName.substr(5), //"this.".length == 5
                 access : [APublic], //TODO support asses, doc, meta?
                 kind   : FVar(TPath({ //TODO support params?
                     name   : baseType.name,
@@ -210,18 +180,22 @@ class TinyUI {
                 }))
             });
 
-            childVarName = "this." + childVarName;
             code += '$childVarName = $newExpr;';
         } else {
-            //ex: <Button var="#myLocalVar" />
-            childVarName = childVarName != null? childVarName.substr(1) : localVarNameGen.next(className);
+            //ex: <Button var="myLocalVar" />
+            //or: <Button />
+            if(childVarName == null) {
+                childVarName = localVarNameGen.next(className);
+            }
             code += 'var $childVarName = $newExpr;';
         }
 
-        var nextCtx = node.nodeName.startsWith("in.")? NodeCtx.ViewItem : NodeCtx.Field(tpe);
-        code += processNode(node, childVarName, nextCtx);
+        code += processNode(node, childVarName, tpe);
 
-        return code + '$varName.addChild($childVarName);';
+        if (node.nodeName.startsWith("ui-")) {
+            code += '$varName.addChild($childVarName);';
+        }
+        return code;
     }
     
     /** loop throught xml node recursively and generate haxe code for initUI function.
@@ -229,27 +203,20 @@ class TinyUI {
      * @param node - the current xml node we are processing when looping.
      * @param varName - the variable name corresponding to the current node.
      *        for root node, varName is "this".
-     *        for other nodes, varName maybe a field name or an initUI local variable generated by `LocalVarNameGen`
-     * @param ctx - see doc of NodeCtx enum */
-    function processNode(node: Xml, varName: String, ctx: NodeCtx): String {
+     *        for other nodes, varName maybe a field name or an initUI local variable generated by `LocalVarNameGen` */
+    function processNode(node: Xml, varName: String, tpe: Type): String {
         //1. process node's attributes
-        var code = attr2Haxe(node, varName);
+        var code = attr2Haxe(node, varName, tpe);
         
         //2. process node's elements
         for (child in node.elements()) {
-            switch [child.nodeName, ctx] {
+            switch [child.nodeName, varName] {
                 //ex: <Sprite><this x="1+2" y="3" /></Sprite>
                 //children nodes are ignored
                 case ["this", _]:
-                    code += attr2Haxe(child, varName);
-                    
-                case ["this.", _]:
-                    code += processNodeAsMultiFnCall(child, varName);
-                
-                case [fnName, _] if (fnName.startsWith("this.")):
-                    code += processNodeAsOneFnCall(child, varName);
+                    code += attr2Haxe(child, varName, tpe);
 
-                case ["for", NodeCtx.ViewItem]:
+                case ["for", _]:
                     var attrs = child.attributes();
                     var iterVar = attrs.next();
                     if (attrs.hasNext()) {
@@ -257,46 +224,55 @@ class TinyUI {
                     }
                     var iter = child.get(iterVar);
                     code += 'for ($iterVar in $iter) {';
-                    code += processNode(child, varName, NodeCtx.ViewItem);
+                    code += processNode(child, varName, tpe);
                     code += '}';
 
-                case [modeName, NodeCtx.ViewItem] if (modeName.startsWith("mode.")):
+                case [modeName, _] if (modeName.startsWith("mode-")):
+                    if (varName != "this") {
+                        Context.warning("'mode-' can only be declared for view class as a whole", xmlPos);
+                    }
                     //will be process later in `genUIMode` method
                     
-                case [group, NodeCtx.ViewItem] if (group.startsWith("in.")):
-                    var className = group.substr(3); //"in.".length == 3
-                    if (className == "") className = "openfl.display.DisplayObjectContainer";
-                    code += processViewItemNode(child, className, varName);
-
-                //if `node` is root node (map to View class) then `child` is className of a View Item
-                case [className, NodeCtx.ViewItem]:
+                case [className, _] if (className.startsWith("ui-")):
+                    className = className.substr(3); //"ui-".length == 3
                     code += processViewItemNode(child, className, varName);
                     
-                case [fieldName, NodeCtx.Field(tpe)]:
-                    //FIXME if tpe is not a ClassType?
-                    var field = tpe.getClass().findField(fieldName);
-                    if (field == null) {
-                        Context.fatalError('Can not find field `$fieldName` in class $tpe', xmlPos);
-                    }
-                    tpe = field.type;
-                    var baseType = tpe.baseType();
-                    var childVarName = localVarNameGen.next(baseType.name);
-                    var newExpr = getNewExpr(child, tpe);
-                    code += 'var $childVarName = $newExpr;';
+                case [className, _] if (child.exists("var")):
+                    code += processViewItemNode(child, className, varName);
 
-                    code += processNode(child, childVarName, NodeCtx.Field(tpe));
-                    code += '$varName.$fieldName = $childVarName;';
+                //setting var or calling method
+                //name is var or method name
+                case [name, _]:
+                    var field = tpe.getClass().findField(name);
+                    if (field.isVar()) {
+                        var fieldTpe = field.type;
+                        var childVarName = localVarNameGen.next(fieldTpe.baseType().name);
+                        var newExpr = getNewExpr(child, fieldTpe);
+                        code += 'var $childVarName = $newExpr;';
+
+                        code += processNode(child, childVarName, fieldTpe);
+                        code += '$varName.$name = $childVarName;';
+                    } else {
+                        code += processNodeAsOneFnCall(child, varName);
+//                        var usings = Context.getLocalUsing()
+//                            .flatMap(function(ref) return ref.get().statics.get())
+//                            .filter(function(field)
+//                                return field.name == name && !field.isVar() &&
+//                                    field.params.length > 0 && Context.unify(fieldTpe, field.params[0].t)
+//                        )
+//                        Context.fatalError('Can not find field `$name` in class $fieldTpe', xmlPos);
+                    }
             }
         }
         
         return code;
     }
 
-    /** return true if node has name startsWith "mode." */
-    static inline function isModeNode(node: Xml) return node.nodeName.startsWith("mode.");
+    /** return true if node has name startsWith "mode-" */
+    static inline function isModeNode(node: Xml) return node.nodeName.startsWith("mode-");
 
     /** extract mode name from node. This method NOT check `node` isModeNode */
-    static inline function getModeName(node: Xml) return node.nodeName.substr(5); //"mode.".length == 5
+    static inline function getModeName(node: Xml) return node.nodeName.substr(5); //"mode-".length == 5
     
     /**push `public static inline var UI_$modeName: Int = ${auto_inc value - start at 0}`
      * for all modeName found in `xml` into buildingField */
@@ -323,38 +299,13 @@ class TinyUI {
     function genUIModes(xml: Xml): String {
         //if xml don't have mode nodes then return ""
         if (! xml.elements().exists(isModeNode)) return "";
-        
-        //replace:
-        //<mode.xx>
-        //  <in var="var1,var2" attrs>..</in>
-        //</mode.xx>
-        //to:
-        //<mode.xx>
-        //  <var1 attrs>..</in>
-        //  <var2 attrs>..</in>
-        //</mode.xx>
-        function replaceShortcutNode(node: Xml) {
-            if (! isModeNode(node)) return;
-            
-            for (child in node.elements()) {
-                if (child.nodeName == "in") {
-                    node.removeChild(child);
-                    for (varName in child.get("var").split(",")) {
-                       node.addChild(child.cloneXml(varName, "var"));
-                    }
-                }
-            }
-        }
-        
-        //replaceShortcutNode for all mode nodes 
-        for (node in xml.elements()) replaceShortcutNode(node);
-        
-        //find ViewItem node has name == varName or "#" + varName
+
+        //find ViewItem node has name == varName or "this." + varName
         inline function viewItemByVar(varName: String): Null<Xml>
             return xml.elements().find(
                 function(node) {
                     var v = node.get("var");
-                    return v == varName || v == "#" + varName;
+                    return node.nodeName.startsWith("ui-") && v == varName || v == "this." + varName;
                 }
             );
         
@@ -408,9 +359,25 @@ class TinyUI {
                 args   : fun.args
             })
         });
-                        
+
         //add modes code to an inner function (in initUI) and set _set_uiMode = that function
         var code = "this._set_uiMode = function(uiNewMode: Int) { switch(uiNewMode) {";
+
+        //similar to: code += processViewItemNode(child, className);
+        //but do not process: addChild, `new` expression, declaring var field.
+        function processModeFor(child: Xml, varName: String) {
+            var itemNode = viewItemByVar(varName);
+            if (itemNode == null) {
+                Context.error(
+                    'View Item for variable name "$varName" not found. ' +
+                    'TinyUI can not parse ui mode <${child.parent.nodeName}>'
+                    , xmlPos);
+            }
+            varName = itemNode.get("var");
+            var tpe = Context.getType(itemNode.nodeName.substr(3)); //"ui-".length == 3
+            code += processNode(child, varName, tpe);
+        }
+
         var defaultMode: String = null;
         for (node in xml.elements()) {
             if (! isModeNode(node)) {
@@ -425,26 +392,33 @@ class TinyUI {
             for (child in node.elements()) {
                 switch(child.nodeName) {
                     case "this":
-                        code += attr2Haxe(child, "this");
-                    
-                    case "this.":
-                        code += processNodeAsMultiFnCall(child, "this");
-                    
+                        code += attr2Haxe(child, "this", Context.getLocalType());
+
                     case fnName if (fnName.startsWith("this.")):
                         code += processNodeAsOneFnCall(child, "this");
                         
-                    case varName:
-                        //similar to: code += processViewItemNode(child, className);
-                        //but do not process: addChild, `new` expression, declaring var field.
-                        var itemNode = viewItemByVar(varName);
-                        if (itemNode == null) {
-                            Context.error('View Item for variable name "$varName" not found. TinyUI can not parse ui mode <mode.$modeName>', xmlPos);
+                    case "in":
+                        for(varName in child.get("var").split(",")) {
+                            processModeFor(child, varName);
                         }
-                        if (itemNode.get("var").charAt(0) != "#") {
-                            varName = 'this.$varName';
+
+                    case varName if (varName.startsWith("in.")):
+                        processModeFor(child, varName.substr(3)); //"in.".length == 3
+
+                    case name: //FIXME duplicate code
+                        var field = Context.getLocalClass().get().findField(name);
+                        var varName = "this";
+                        if (field != null) {
+                            var fieldTpe = field.type;
+                            var childVarName = localVarNameGen.next(fieldTpe.baseType().name);
+                            var newExpr = getNewExpr(child, fieldTpe);
+                            code += 'var $childVarName = $newExpr;';
+
+                            code += processNode(child, childVarName, fieldTpe);
+                            code += '$varName.$name = $childVarName;';
+                        } else {
+                            code += processNodeAsOneFnCall(child, varName);
                         }
-                        var tpe = Context.getType(itemNode.nodeName);
-                        code += processNode(child, varName, NodeCtx.Field(tpe));
                 }
             }
         }
@@ -545,49 +519,6 @@ class TinyUI {
 }
 
 class Tools {
-    /** Creates an Array from Iterator `it` */
-    public static function array<A>( it : Iterator<A> ) : Array<A> {
-        var a = new Array<A>();
-        while(it.hasNext())
-            a.push(it.next());
-        return a;
-    }
-    
-    /**
-        Tells if `it` contains an element for which `f` is true.
-
-        This function returns true as soon as an element is found for which a
-        call to `f` returns true.
-
-        If no such element is found, the result is false.
-
-        If `f` is null, the result is unspecified.
-    **/
-    public static function exists<A>( it : Iterator<A>, f : A -> Bool ): Bool {
-        while (it.hasNext())
-            if (f(it.next()))
-                return true;
-        return false;
-    }
-    
-    /**
-        Returns the first element of `it` for which `f` is true.
-
-        This function returns as soon as an element is found for which a call to
-        `f` returns true.
-
-        If no such element is found, the result is null.
-
-        If `f` is null, the result is unspecified.
-    **/
-    public static function find<T>( it : Iterator<T>, f : T -> Bool ) : Null<T> {
-        while (it.hasNext()) {
-            var v = it.next();
-            if(f(v)) return v;
-        }
-        return null;
-    }
-    
     public static function baseType(tpe: Type): Null<BaseType> {
         return switch(tpe) {
             case TEnum(t, _): t.get();
@@ -598,6 +529,12 @@ class Tools {
         }
     }
 
+    public static inline function isVar(field: ClassField): Bool
+        return switch(field.kind) {
+            case FVar(_): true;
+            default: false;
+        }
+
     /**return the full pack + name of the Class `tpe`
      * tpe must represent a class. see haxe.macro.TypeTools.getClass */
     public static function clsFqdn(tpe: Type): String {
@@ -605,15 +542,6 @@ class Tools {
         return cls.pack.toDotPath(cls.name);
     }
     
-    public static function cloneXml(node: Xml, newName: String = null, excludeAttr: String = null): Xml {
-        var ret = Xml.createElement(newName == null? node.nodeName : newName);
-        for (a in node.attributes())
-            if (a != excludeAttr)
-                ret.set(a, node.get(a));
-        node.iter(function(child) ret.addChild(cloneXml(child)));
-        return ret;
-    }
-
     public static function parseXml(xmlFile: String): Xml {
         return try {
              Xml.parse(File.getContent(xmlFile)).firstElement();
@@ -642,19 +570,6 @@ private class LocalVarNameGen {
         localVarNum.set(className, ++i);
         return '__ui$className$i';
     }
-}
-
-/** Context of xml node in the ui (.xml) file */
-private enum NodeCtx {
-    /** ViewItem is for direct child nodes of View Container (root node) or View Group (<in.$groupClassName> node).
-      * ex: the Bitmap node in: <UI><Bitmap ../></UI>. Here, nodeName is the class name.
-      * or: <UI><in.Sprite><Bitmap ../></in.Sprite></UI> */
-    ViewItem;
-    
-    /** Field(tpe): is for field node that declare a field of Type `tpe`.
-      * ex: the defaultTextFormat node in: <UI><TextField><defaultTextFormat .. /></TextField></UI>
-      * Here, nodeName is the property name and tpe is TextField */
-    Field(tpe: Type);
 }
 
 #end

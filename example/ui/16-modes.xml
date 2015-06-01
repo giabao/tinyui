@@ -1,0 +1,42 @@
+<UI>
+    <TextFormat var="fmt1" font="'Tahoma'" size="22" color="0xFFFF00" />
+    <TextFormat var="fmt2" font="'Tahoma'" size="12" color="0xFF0000" />
+
+    <ui-Bitmap var="bmp1" src="'img/sd.jpg'" />
+    <ui-TextField var="txt1" border="true" borderColor="0xFF0000" x="bmp1.width" autoSize="TextFieldAutoSize.LEFT" />
+    <ui-TextField var="txt2" border="true" borderColor="0xFF0000" x="bmp1.width + 200" />
+    <!--declare modes (states) of View by adding some `mode-modeName` nodes (direct child of root node).
+        TinyUI will add some fields to the View class:
+            public var uiMode(default, set): Int = -1;
+            var _set_uiMode : Int -> Void;
+            function set_uiMode(mode:Int):Int {..}
+        And init _set_uiMode at the end of initUI method:
+            this._set_uiMode = function(uiNewMode:Int) {..}
+        Also: if mode node has attribute `default="true"`
+            then TinyUI will add expression `this.uiMode = modeName;` to the end of initUI method
+        (should only one mode node be set default. If multi then the last one will be used).
+        
+        Note: _set_uiMode is a closure inside initUI, so in mode nodes, we can reference to
+            + all local variables that is set in UI (see example local-var.xml)
+            + all initUI arguments (see example initUI-args.xml)-->
+    <mode-M1 default="true">
+        <!--direct children of mode node can:
+            + set properties for view: <this vars/>
+            + call method (or extension method) of view: <this. methods /> or <this.fnName ..>
+            + declare changes for ViewItem by adding node with name is var name of the item:
+              - var field (see example declare-var.xml)
+              - or view item local var name (see the correspond example)
+              Note: view item local var name INSIDE a for-loop is not support (see example for-loop.xml).
+            + declare changes for multiple view items by <in> node -->
+        <in var="txt1,txt2" y="100" type="DYNAMIC" setTextFormat="fmt1" />
+        <in.txt1 text="'txt1 in mode 1'" />
+        <in.txt2 text="'txt2 in mode 1'" />
+        <in.bmp1 scaleX="0.5" scaleY="0.5" />
+    </mode-M1>
+    <mode-M2>
+        <in var="txt1,txt2" y="0" type="INPUT" defaultTextFormat="fmt2" setTextFormat="fmt2" />
+        <in.txt1 text="'txt1 in mode 2'" />
+        <in.txt2 text="'txt2 in mode 2'" />
+        <in.bmp1 scaleX="1" scaleY="1" />
+    </mode-M2>
+</UI>

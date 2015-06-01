@@ -38,7 +38,7 @@ haxelib install tinyui
 2. UI is declared in an xml file
     ```xml
     <UI>
-        <TextField var="txt" x="XX" text="'Hi TinyUI!'" />
+        <TextField var="this.txt" x="XX" text="'Hi TinyUI!'" />
     </UI>
     ```
 

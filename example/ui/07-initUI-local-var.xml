@@ -1,0 +1,10 @@
+<UI>
+    <!--sometimes you need a simple logic in view.
+    TinyUI support declaring local variable (local in initUI function).
+    Note: for complex logic, you should code right in the building class (in haxe code).-->
+    <TextFormat var="myFmt" font="'Tahoma'" size="16" bold="true" />
+    <ui-TextField var="txt1" defaultTextFormat="myFmt" x="100" text="'Hi TinyUI!'" />
+
+    <!--see the generated code. txt2 is a field where txt1 and foo is local variables-->
+    <ui-TextField var="this.txt2" x="txt1.x" text="'Hi TinyUI!'" />
+</UI>

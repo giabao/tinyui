@@ -1,2 +1,10 @@
 <UI>
+    <!--You declare UI in a xml file, then `inject` into a haxe class by macro meta:
+    `@:build(TinyUI.build(path_to_xml_file))`
+    The injected class is call the `building class` -->
+
+    <!--`code` in xml can interact with code in .hx and vise versa
+    TinyUI is just a macro tool to translate xml into haxe code!-->
+
+    <!--See the generated code. TinyUI will generate a initUI function in the building class-->
 </UI>

@@ -1,9 +1,0 @@
-<UI>
-    <Bitmap var="img1"
-            new="new Bitmap(Assets.getBitmapData('img/sd.jpg'))" />
-    <Bitmap y="img1.height + PADDING"
-            new=":Assets.getBitmapData('img/sd.jpg')" />
-    <Bitmap x="img1.width + PADDING">
-        <bitmapData new="Assets.getBitmapData('img/sd.jpg')" />
-    </Bitmap>
-</UI>

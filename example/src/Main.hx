@@ -1,22 +1,21 @@
 import openfl.display.Sprite;
 
 import UI01Empty; //import for compiling
-import UI02FieldAttr;
+import UI02HaxeFieldByXmlAttr;
 import UI03ThisNode;
-import UI04LocalVar;
-import UI05InitUIArgs;
-import UI06ViewItem;
-import UI07DeclareVar;
-import UI08ViewItemLocalVarName;
-import UI09ItemFieldNode;
-import UI10FunctionNode;
-import UI11NewExpression;
-import UI12UsingExtensionMethod;
-import UI13NestedItems;
-import UI14ForLoop;
-import UI15Layout;
-import UI16Tooltip;
-import UI17Modes;
+import UI07InitUILocalVar;
+import UI04InitUIArgs;
+import UI05ViewItem;
+import UI06ViewInstanceVar;
+import UI08HaxeFieldByChildNode;
+import UI09CallMethod;
+import UI10NewExpression;
+import UI11ExtensionMethod;
+import UI12NestedItems;
+import UI13ForLoop;
+import UI14Layout;
+import UI15Tooltip;
+import UI16Modes;
 
 class Main extends Sprite {
     public function new() {
@@ -25,17 +24,19 @@ class Main extends Sprite {
 
 //        addChild(new UI15Layout());
 //        addChild(new UI16Tooltip());
-        addChild(new UI17Modes());
+        addChild(new UI16Modes());
 //        addChild(new UI12UsingExtensionMethod());
+        var xml = _tinyui.Xml.parse('<UI fun.=""><addchild foo:=""/></UI>');
+        trace(xml);
     }
 
     function ex1() {
-        addChild(new UI10FunctionNode());
+        addChild(new UI09CallMethod());
 
-        var v10 = new UI11NewExpression();
+        var v10 = new UI10NewExpression();
         addChildAt(v10, 0);
         v10.initUI();
 
-        addChild(new UI14ForLoop());
+        addChild(new UI13ForLoop());
     }
 }

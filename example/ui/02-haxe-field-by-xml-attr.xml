@@ -1,0 +1,8 @@
+<UI width="100+2" x="100" y="x">
+    <!--Root node represent the view object (instance of the building class)-->
+
+    <!--Fields of the view object can be set by using xml attributes as above.
+    Note-1: attribute's value can be any haxe expression.
+    Note-2: The order of attribute declaration is important.
+        In above ex, you must set `x` before `y`-->
+</UI>

@@ -1,3 +1,5 @@
 <UI x="1+2">
+    <!--attributes of node with name `this` have same meaning as attributes of its parent node.
+        children of `this` node are ignore.-->
     <this width="this.x+97" />
 </UI>

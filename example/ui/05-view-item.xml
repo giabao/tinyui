@@ -1,0 +1,8 @@
+<UI>
+    <!--See the generated code.
+    `TextField` is the class name. You must import this class in the building class.
+    TinyUI will create an instance of this class, set properties, and then addChild to the view object.-->
+    <ui-TextField text="'Hi TinyUI!'" x="1">
+        <this y="2" />
+    </ui-TextField>
+</UI>

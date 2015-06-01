@@ -1,0 +1,9 @@
+<UI>
+    <ui-TextField>
+        <!--Complex field of View Item can be set by a child node:-->
+        <defaultTextFormat font="'Tahoma'" size="16" bold="true" />
+        <!--Note that, in flash (and openfl),
+            text need be set after setting defaultTextFormat otherwise the TextFormat will not be used.-->
+        <this text="'Hi TinyUI!'" />
+    </ui-TextField>
+</UI>
