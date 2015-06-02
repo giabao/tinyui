@@ -1,0 +1,17 @@
+<UI>
+    <ui-TextField class="fmt1" text="'Text 1'" />
+    <ui-TextField class="fmt2" text="'Text 2'" />
+    <!--backgroundColor will be override here-->
+    <ui-TextField class="fmt3" text="'Text 3'" backgroundColor="0x0000FF" />
+
+    <class>
+        <fmt1 backgroundColor="0">
+            <defaultTextFormat color="0xff0000" />
+        </fmt1>
+        <fmt2 selectable="false">
+            <defaultTextFormat color="0x00ff00" bold="true" />
+        </fmt2>
+        <!--fmt3.defaultTextFormat will be taken from fmt1-->
+        <fmt3 extends="fmt1,fmt2" />
+    </class>
+</UI>

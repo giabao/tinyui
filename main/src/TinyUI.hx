@@ -33,7 +33,8 @@ class TinyUI {
     macro public static function build(xmlFile: String): Array<Field> {
         var xml = Tools.parseXml(xmlFile);
         try {
-            var tinyUI = new TinyUI(Context.makePosition( { min:0, max:0, file:xmlFile } ));
+            var xmlPos = Context.makePosition( { min:0, max:0, file:xmlFile } );
+            var tinyUI = new TinyUI(xmlPos, new Styles(xml));
             return tinyUI.doBuild(xml);
         } catch (e: Dynamic) {
             var msg = 'Error when TinyUI is building xml file $xmlFile\nError: $e\nCallStack:' +
@@ -48,9 +49,11 @@ class TinyUI {
     /** store the buiding fields */
     var buildingFields: Array<Field> = [];
     var localVarNameGen = new LocalVarNameGen();
+    var styles: Styles;
 
-    function new(xmlPos: Position) {
+    function new(xmlPos: Position, styles: Styles) {
         this.xmlPos = xmlPos;
+        this.styles = styles;
     }
 
     /** See build(String) */
@@ -95,6 +98,10 @@ class TinyUI {
                 //"function" attribute of root node is processed in `genInitCode` method.
                 case "new" | "var" | "function":
                     continue;
+
+                case "class":
+                    var styleXml = styles.getStyleXml(node);
+                    code += processNode(styleXml, varName, tpe);
 
                 //ex: <Button label.text="'OK'" />
                 //or: <TextField setTextFormat="myFmt,1" />
@@ -232,7 +239,10 @@ class TinyUI {
                         Context.warning("'mode-' can only be declared for view class as a whole", xmlPos);
                     }
                     //will be process later in `genUIMode` method
-                    
+
+                case ["class", _]:
+                    //process in attr2Haxe
+
                 case [className, _] if (className.startsWith("ui-")):
                     className = className.substr(3); //"ui-".length == 3
                     code += processViewItemNode(child, className, varName);
@@ -244,6 +254,14 @@ class TinyUI {
                 //name is var or method name
                 case [name, _]:
                     var field = tpe.getClass().findField(name);
+                    if (field == null) {
+                        var msg = 'Not found field $name of type $tpe when parsing $child.';
+                        var c = name.charAt(0);
+                        if (c.toUpperCase() == c) {
+                            msg += " Are you declaring a view item (need prefix `ui-` to the node name)?";
+                        }
+                        throw msg;
+                    }
                     if (field.isVar()) {
                         var fieldTpe = field.type;
                         var childVarName = localVarNameGen.next(fieldTpe.baseType().name);
@@ -541,13 +559,26 @@ class Tools {
         var cls: ClassType = tpe.getClass();
         return cls.pack.toDotPath(cls.name);
     }
-    
+
+    public static function cloneXml(node: Xml, newName: String = null, excludeAttr: String = null): Xml {
+        var ret = Xml.createElement(newName == null? node.nodeName : newName);
+        for (a in node.attributes())
+            if (a != excludeAttr)
+                ret.set(a, node.get(a));
+        node.iter(function(child) ret.addChild(cloneXml(child)));
+        return ret;
+    }
+
     public static function parseXml(xmlFile: String): Xml {
         return try {
              Xml.parse(File.getContent(xmlFile)).firstElement();
         } catch(e: Dynamic) {
             Context.fatalError('Can NOT parse $xmlFile, $e', Context.currentPos());
         }
+    }
+
+    public static inline function hasElemNamed(xml: Xml, n: String): Bool {
+        return xml.elementsNamed(n).hasNext();
     }
 }
 
@@ -572,4 +603,70 @@ private class LocalVarNameGen {
     }
 }
 
+private class Styles {
+    var xml: Xml;
+
+    public function new(xml: Xml) {
+        this.xml = xml;
+    }
+
+    function resolveStyleNode(styleId: String): Xml {
+        var matchedStyles = xml.elementsNamed("class")
+            .flatMap(function(x) return x.elementsNamed(styleId));
+        if (matchedStyles.isEmpty()) {
+            throw 'Not found style $styleId';
+        }
+        var ret = matchedStyles.pop();
+        if (! matchedStyles.isEmpty()) {
+            throw 'found multiple style $styleId';
+        }
+        return ret;
+    }
+
+    function mergeStyle(styleId: String, ret: Xml, instanceNode: Xml, mergeToStyle: String = null) {
+        var styleNode = resolveStyleNode(styleId);
+
+        //clone attributes except "extends"
+        //also check to not re-set the existed attr
+        for(a in styleNode.attributes())
+            if (a != "extends")
+                if (ret.get(a) == null && instanceNode.get(a) == null) {
+                    ret.set(a, styleNode.get(a));
+                } else {
+                    var msg = 'att $a in style $styleId is overrided when merging style $mergeToStyle!';
+                    if (instanceNode.get(a) != null) {
+                        msg += " (the instance node redefine this attribute)";
+                    }
+                    Context.warning(msg, Context.currentPos());
+                }
+
+        //clone children
+        //also check to not re-add the existed child with same nodeName
+        for(c in styleNode.elements())
+            if (ret.hasElemNamed(c.nodeName) || instanceNode.hasElemNamed(c.nodeName)) {
+                var msg = 'child ${c.nodeName} in style $styleId is overrided when merging style $mergeToStyle!';
+                if (instanceNode.hasElemNamed(c.nodeName)) {
+                    msg += " (the instance node redefine this child node)";
+                }
+                Context.warning(msg, Context.currentPos());
+            } else {
+                ret.addChild(c.cloneXml());
+            }
+
+        var baseStyleIds = styleNode.get("extends");
+        if (baseStyleIds != null)
+            for(baseStyleId in baseStyleIds.split(","))
+                mergeStyle(baseStyleId, ret, instanceNode, styleId);
+    }
+
+    public function getStyleXml(node: Xml): Xml {
+        var styleId = node.get("class");
+        if(styleId == null) {
+            throw 'node do not have `class` attribute! $node';
+        }
+        var ret = Xml.createElement("style");
+        mergeStyle(styleId, ret, node);
+        return ret;
+    }
+}
 #end

@@ -81,6 +81,8 @@ we use [Semantic Versioning](http://semver.org/)
     
     `<varName ..>` must be migrate to `<in.varName ..>`
 
++ new feature: support styling. see `17-styles.xml`
+
 #### 3.2.0
 + support view modes (view states)
 

@@ -16,6 +16,7 @@ import UI13ForLoop;
 import UI14Layout;
 import UI15Tooltip;
 import UI16Modes;
+import UI17Styles;
 
 class Main extends Sprite {
     public function new() {
@@ -24,10 +25,11 @@ class Main extends Sprite {
 
 //        addChild(new UI15Layout());
 //        addChild(new UI16Tooltip());
-        addChild(new UI16Modes());
+//        addChild(new UI16Modes());
 //        addChild(new UI12UsingExtensionMethod());
         var xml = _tinyui.Xml.parse('<UI fun.=""><addchild foo:=""/></UI>');
         trace(xml);
+        addChild(new UI17Styles());
     }
 
     function ex1() {
