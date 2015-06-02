@@ -4,10 +4,7 @@
     <!--backgroundColor will be override here-->
     <ui-TextField class="fmt3" text="'Text 3'" backgroundColor="0x0000FF" />
 
-    <class>
-        <fmt1 backgroundColor="0">
-            <defaultTextFormat color="0xff0000" />
-        </fmt1>
+    <class import="ui/styles.xml">
         <fmt2 selectable="false">
             <defaultTextFormat color="0x00ff00" bold="true" />
         </fmt2>

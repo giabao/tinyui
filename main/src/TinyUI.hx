@@ -611,16 +611,29 @@ private class Styles {
     }
 
     function resolveStyleNode(styleId: String): Xml {
-        var matchedStyles = xml.elementsNamed("class")
+        function resolveImported(classNode: Xml): Iterator<Xml> {
+            var extStyleFile = classNode.get("import");
+            if(extStyleFile == null) {
+                return [].iterator();
+            }
+            return Tools.parseXml(extStyleFile).elementsNamed(styleId);
+        }
+
+        var matchedStyles =  this.xml.elementsNamed("class")
             .flatMap(function(x) return x.elementsNamed(styleId));
+
+        if (matchedStyles.isEmpty()) {
+            //can not reuse Iterator: elementsNamed("class")
+            matchedStyles =  this.xml.elementsNamed("class").flatMap(resolveImported);
+        }
+
         if (matchedStyles.isEmpty()) {
             throw 'Not found style $styleId';
         }
-        var ret = matchedStyles.pop();
-        if (! matchedStyles.isEmpty()) {
+        if (matchedStyles.length > 1) {
             throw 'found multiple style $styleId';
         }
-        return ret;
+        return matchedStyles.first();
     }
 
     function mergeStyle(styleId: String, ret: Xml, instanceNode: Xml, mergeToStyle: String = null) {
