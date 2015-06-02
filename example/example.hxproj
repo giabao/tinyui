@@ -18,7 +18,7 @@
   <classpaths>
     <class path="C:\HaxeToolkit\haxe\lib\tinyui\git\main\src" />
     <class path="C:\HaxeToolkit\haxe\lib\openfl-tooltip\git\src" />
-    <class path="C:\HaxeToolkit\haxe\lib\openfl\3,0,7" />
+    <class path="C:\HaxeToolkit\haxe\lib\openfl\3,0,8" />
     <class path="C:\HaxeToolkit\haxe\lib\lime\2,4,2" />
     <class path="C:\HaxeToolkit\haxe\lib\actuate\1,8,6" />
     <class path="C:\HaxeToolkit\haxe\lib\advanced-layout\git" />
@@ -27,7 +27,7 @@
   </classpaths>
   <!-- Build options -->
   <build>
-    <option directives="tinyui=0.0.0&#xA;openfl-tooltip=0.0.0&#xA;openfl=3.0.7&#xA;lime=2.4.2&#xA;actuate=1.8.6&#xA;advanced-layout=0.4.1&#xA;openfl-next&#xA;tools=2.4.2&#xA;no-compilation&#xA;openfl-flash&#xA;web" />
+    <option directives="tinyui=0.0.0&#xA;openfl-tooltip=0.0.0&#xA;openfl=3.0.8&#xA;lime=2.4.2&#xA;actuate=1.8.6&#xA;advanced-layout=0.4.1&#xA;openfl-next&#xA;tools=2.4.2&#xA;no-compilation&#xA;openfl-flash&#xA;web" />
     <option flashStrict="False" />
     <option noInlineOnDebug="False" />
     <option mainClass="ApplicationMain" />
