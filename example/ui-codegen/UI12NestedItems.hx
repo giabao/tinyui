@@ -5,8 +5,9 @@ import openfl.display.Sprite;
 class UI12NestedItems extends Sprite {
 	//++++++++++ code gen by tinyui ++++++++++//
 	public function initUI() {
-		var __uiUI05ViewItem1 = new UI05ViewItem();
-		this.addChild(__uiUI05ViewItem1);
+		var __uiUI06ViewInstanceVar1 = new UI06ViewInstanceVar();
+		__uiUI06ViewInstanceVar1.txt.selectable = false;
+		this.addChild(__uiUI06ViewInstanceVar1);
 		var spr1 = new flash.display.Sprite();
 		spr1.x = 5;
 		var txt1 = new flash.text.TextField();

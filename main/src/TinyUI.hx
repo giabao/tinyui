@@ -106,15 +106,7 @@ class TinyUI {
                 //ex: <Button label.text="'OK'" />
                 //or: <TextField setTextFormat="myFmt,1" />
                 default:
-                    var value = node.get(attr);
-                    //check if attr is FVar
-                    var field: ClassField = tpe.getClass().findField(attr);
-                    if (field != null && field.isVar()) {
-                        code += '$varName.$attr = $value;';
-                    } else {
-                        //if attr is not FVar then we expect it is a method or an extension method
-                        code += '$varName.$attr($value);';
-                    }
+                    code += varName + tpe.setOrCall(attr, node.get(attr));
             }
         }
         return code;
@@ -253,7 +245,7 @@ class TinyUI {
                 //setting var or calling method
                 //name is var or method name
                 case [name, _]:
-                    var field = tpe.getClass().findField(name);
+                    var field: ClassField = tpe.findDotField(name);
                     if (field == null) {
                         var msg = 'Not found field $name of type $tpe when parsing $child.';
                         var c = name.charAt(0);
@@ -272,13 +264,6 @@ class TinyUI {
                         code += '$varName.$name = $childVarName;';
                     } else {
                         code += processNodeAsOneFnCall(child, varName);
-//                        var usings = Context.getLocalUsing()
-//                            .flatMap(function(ref) return ref.get().statics.get())
-//                            .filter(function(field)
-//                                return field.name == name && !field.isVar() &&
-//                                    field.params.length > 0 && Context.unify(fieldTpe, field.params[0].t)
-//                        )
-//                        Context.fatalError('Can not find field `$name` in class $fieldTpe', xmlPos);
                     }
             }
         }
@@ -547,11 +532,32 @@ class Tools {
         }
     }
 
+    /** check if `obj.dottedName` is a field with `obj` is an object of Type `tpe`
+      * @param dottedName dot-separated name. ex label.tex */
+    public static function findDotField(tpe: Type, dottedName: String): Null<ClassField> {
+        var i = dottedName.indexOf(".");
+        var name = i == -1? dottedName : dottedName.substr(0, i);
+
+        //FIXME if tpe is not a TInst?
+        var field: ClassField = tpe.getClass().findField(name);
+        if (field == null) return null;
+
+        return i == -1? field : switch(field.kind) {
+            case FVar(_): findDotField(field.type, dottedName.substr(i + 1));
+            default: null;
+        }
+    }
+
     public static inline function isVar(field: ClassField): Bool
-        return switch(field.kind) {
+        return field == null? false : switch(field.kind) {
             case FVar(_): true;
             default: false;
         }
+
+    /** if attr is not FVar then we expect it is a method or an extension method */
+    public static inline function setOrCall(tpe: Type, dottedName: String, value: String): String {
+        return tpe.findDotField(dottedName).isVar()? '.$dottedName = $value;' : '.$dottedName($value);';
+    }
 
     /**return the full pack + name of the Class `tpe`
      * tpe must represent a class. see haxe.macro.TypeTools.getClass */

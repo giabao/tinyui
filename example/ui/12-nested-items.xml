@@ -1,6 +1,6 @@
 <UI>
     <!--The UI has nested items should be split into a dedicated view class -->
-    <ui-UI05ViewItem />
+    <ui-UI06ViewInstanceVar txt.selectable="false" />
 
     <!--For simple nested items, you can use the nested `ui-` nodes:-->
     <ui-Sprite var="spr1" x="5">
