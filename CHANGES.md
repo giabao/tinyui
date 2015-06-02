@@ -1,6 +1,9 @@
 ## Changelogs
 we use [Semantic Versioning](http://semver.org/)
 
+#### 4.0.1
++ fixes error when setting nested variable in view
+
 #### 4.0.0
 + (breaking change) init default uiMode var to -1 and declare the inline static vars UI_$modeName start at 0 instead of 1
 
