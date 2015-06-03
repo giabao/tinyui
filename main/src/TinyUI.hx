@@ -586,6 +586,8 @@ class Tools {
     public static inline function hasElemNamed(xml: Xml, n: String): Bool {
         return xml.elementsNamed(n).hasNext();
     }
+    public static function namedElemIterable(x: Xml, n: String) return
+        [for (child in x) if (child.nodeType == Element && child.nodeName == n) child];
 }
 
 /** map from className to an auto-inc value
@@ -616,23 +618,21 @@ private class Styles {
         this.xml = xml;
     }
 
-    function resolveStyleNode(styleId: String): Xml {
-        function resolveImported(classNode: Xml): Iterator<Xml> {
+    static function resolveStyleNode(xml: Xml, styleId: String): Xml {
+        inline function fromNode(x: Xml) return x.namedElemIterable(styleId);
+
+        inline function fromImported(classNode: Xml): Iterable<Xml> {
             var extStyleFile = classNode.get("import");
-            if(extStyleFile == null) {
-                return [].iterator();
-            }
-            return Tools.parseXml(extStyleFile).elementsNamed(styleId);
+            return extStyleFile == null?
+                [] : resolveStyleNode(Tools.parseXml(extStyleFile), styleId);
         }
 
-        var matchedStyles =  this.xml.elementsNamed("class")
-            .flatMap(function(x) return x.elementsNamed(styleId));
+        var classNodes = xml.namedElemIterable("class");
 
+        var matchedStyles = classNodes.flatMap(fromNode);
         if (matchedStyles.isEmpty()) {
-            //can not reuse Iterator: elementsNamed("class")
-            matchedStyles =  this.xml.elementsNamed("class").flatMap(resolveImported);
+            matchedStyles = classNodes.flatMap(fromImported);
         }
-
         if (matchedStyles.isEmpty()) {
             throw 'Not found style $styleId';
         }
@@ -643,7 +643,7 @@ private class Styles {
     }
 
     function mergeStyle(styleId: String, ret: Xml, instanceNode: Xml, mergeToStyle: String = null) {
-        var styleNode = resolveStyleNode(styleId);
+        var styleNode = resolveStyleNode(this.xml, styleId);
 
         //clone attributes except "extends"
         //also check to not re-set the existed attr
