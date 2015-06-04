@@ -1,10 +1,10 @@
 <UI>
     <!--The UI has nested items should be split into a dedicated view class -->
-    <ui-UI06ViewInstanceVar txt.selectable="false" />
+    <UI06ViewInstanceVar txt.selectable="false" />
 
     <!--For simple nested items, you can use the nested `ui-` nodes:-->
-    <ui-Sprite var="spr1" x="5">
-        <ui-TextField var="txt1" text="'nested item'" />
-        <ui-TextField text="txt1.text" y="40" />
-    </ui-Sprite>
+    <Sprite var="spr1" x="5">
+        <TextField var="txt1" text="'nested item'" />
+        <TextField text="txt1.text" y="40" />
+    </Sprite>
 </UI>

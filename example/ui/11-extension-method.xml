@@ -1,3 +1,3 @@
 <UI>
-    <ui-Bitmap src="'img/sd.jpg'" />
+    <Bitmap src="'img/sd.jpg'" />
 </UI>

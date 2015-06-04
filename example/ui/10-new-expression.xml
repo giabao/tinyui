@@ -1,11 +1,11 @@
 <UI>
-    <Int var="foo" new="100" />
-    <ui-Bitmap var="img1"
+    <var.Int var="foo" new="100" />
+    <Bitmap var="img1"
             new="new Bitmap(Assets.getBitmapData('img/sd.jpg'))" />
     <!--If you're a lazy guy, tinyui support a shortcut syntax:
     `:args` is replaced by `new the_type(args)`-->
-    <ui-Bitmap new=":Assets.getBitmapData('img/sd.jpg')">
+    <Bitmap new=":Assets.getBitmapData('img/sd.jpg')">
         <this x="5" />
-        <y new="img1.height + PADDING" />
-    </ui-Bitmap>
+        <this.y new="img1.height + PADDING" />
+    </Bitmap>
 </UI>

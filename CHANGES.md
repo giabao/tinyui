@@ -1,6 +1,12 @@
 ## Changelogs
 we use [Semantic Versioning](http://semver.org/)
 
+#### 5.0.0
+we break change again :(
+This time, I think the syntax for declaring ui in xml in tinyui is stable (not be changed again :d)
+
+See example 18-all.xml for the new syntax (more consistent, less verbose)
+
 #### 4.0.1
 + fixes error when setting nested variable in view
 

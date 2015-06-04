@@ -50,6 +50,7 @@ class UI16Modes extends Sprite {
 		this._set_uiMode = function(uiNewMode:Int) {
 			switch (uiNewMode) {
 				case UI_M1:{
+					this.x = 20;
 					txt1.y = 100;
 					txt1.type = DYNAMIC;
 					txt1.setTextFormat(fmt1);
@@ -62,6 +63,7 @@ class UI16Modes extends Sprite {
 					bmp1.scaleY = 0.5;
 				};
 				case UI_M2:{
+					this.x = 40;
 					txt1.y = 0;
 					txt1.type = INPUT;
 					txt1.defaultTextFormat = fmt2;

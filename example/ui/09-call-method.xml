@@ -4,19 +4,19 @@
          x is a var field => gen code:
          graphics.drawCircle is a function => gen code: .x = 1
         Ex: <Foo baz="1" /> will gen code: graphics.drawCircle(100,100,50) -->
-    <ui-Shape x="1" graphics.drawCircle="100,100,50" />
+    <Shape x="1" graphics.drawCircle="100,100,50" />
 
-    <TextFormat var="largeFmt" font="'Tahoma'" size="22" color="0xFF0000"/>
+    <var.TextFormat var="largeFmt" font="'Tahoma'" size="22" color="0xFF0000"/>
 
     <!--You can also call function using `this.` child nodes as bellow: -->
-    <ui-TextField text="'Hi TinyUI!'">
+    <TextField text="'Hi TinyUI!'">
         <!--We pass arguments to the function by adding attributes and/or child nodes to the fnName node.
             Note that, the attribute names is not importance. Only the ordering is.-->
-        <setTextFormat format="largeFmt" beginIndex="0" endIndex="3" />
-        <setTextFormat>
+        <this.setTextFormat format="largeFmt" beginIndex="0" endIndex="3" />
+        <this.setTextFormat>
             <TextFormat font="'Tahoma'" size="13" color="0xFF0000" bold="true" />
             <this beginIndex="3" endIndex="7" />
-        </setTextFormat>
+        </this.setTextFormat>
         <this setTextFormat="largeFmt, 7, 10" />
-    </ui-TextField>
+    </TextField>
 </UI>

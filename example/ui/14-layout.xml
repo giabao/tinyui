@@ -1,12 +1,12 @@
 <UI>
-    <TextFormat var="largeFmt" font="'Tahoma'" size="22" color="0xFF0000" />
+    <var.TextFormat var="largeFmt" font="'Tahoma'" size="22" color="0xFF0000" />
 
-    <ui-Bitmap var="bmp1" src="'img/sd.jpg'" />
-    <ui-Bitmap bitmapData="bmp1.bitmapData"
-               alignRight="" alignBottom="15" />
-    <ui-TextField var="txt1" text="'Hi &amp; Layout!'" width="200" height="33"
-                  setTextFormat="largeFmt"
-                  rightOf="bmp1, PADDING" />
-    <ui-TextField defaultTextFormat="largeFmt" text="'Hi Layout2!'" width="200"
+    <Bitmap var="bmp1" src="'img/sd.jpg'" />
+    <Bitmap bitmapData="bmp1.bitmapData"
+            alignRight="" alignBottom="15" />
+    <TextField var="txt1" text="'Hi &amp; Layout!'" width="200" height="33"
+               setTextFormat="largeFmt"
+               rightOf="bmp1, PADDING" />
+    <TextField defaultTextFormat="largeFmt" text="'Hi Layout2!'" width="200"
                below="txt1" alignWith="txt1,LEFT" />
 </UI>

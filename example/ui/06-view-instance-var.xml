@@ -3,6 +3,6 @@
         tinyui will generate those fields for the building class:
             `public var txt: TextField`
             `public var myFmt: TextFormat` -->
-    <TextFormat var="this.myFmt" font="'Tahoma'" size="16" bold="true" />
-    <ui-TextField var="this.txt" defaultTextFormat="myFmt" text="'Hi TinyUI!'" />
+    <var.TextFormat var.field="myFmt" font="'Tahoma'" size="16" bold="true" />
+    <TextField var.field="txt" defaultTextFormat="myFmt" text="'Hi TinyUI!'" />
 </UI>

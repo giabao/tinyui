@@ -17,6 +17,7 @@ import UI14Layout;
 import UI15Tooltip;
 import UI16Modes;
 import UI17Styles;
+import UI18All;
 
 class Main extends Sprite {
     public function new() {

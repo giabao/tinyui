@@ -1,5 +1,5 @@
 <class>
     <fmt1 backgroundColor="0">
-        <defaultTextFormat color="0xff0000" />
+        <this.defaultTextFormat color="0xff0000" />
     </fmt1>
 </class>
