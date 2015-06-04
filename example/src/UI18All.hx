@@ -18,7 +18,7 @@ class UI18All extends Sprite {
         trace(msg);
     }
     function myMethod(i1: Int, msg: String){ }
-    function complexMethod2(i1: Int, tf: TextFormat, i2: Int){ }
+    function complexMethod(i1: Int, tf: TextFormat, i2: Int){ }
     function methodCreateSprite(): Sprite {
         return new Sprite();
     }

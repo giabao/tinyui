@@ -14,8 +14,7 @@ using Lambda;
 using com.sandinh.core.LambdaEx;
 using StringTools;
 using TinyUI.Tools;
-using haxe.macro.TypeTools;
-using haxe.macro.MacroStringTools;
+using haxe.macro.Tools;
 
 class TinyUI {
     static var genCodeDir: String = null;
@@ -34,8 +33,8 @@ class TinyUI {
         var xml = Tools.parseXml(xmlFile);
         try {
             var xmlPos = Context.makePosition( { min:0, max:0, file:xmlFile } );
-            var tinyUI = new TinyUI(xmlPos, new Styles(xml));
-            return tinyUI.doBuild(xml);
+            var tinyUI = new TinyUI(xmlPos, xml);
+            return tinyUI.doBuild();
         } catch (e: Dynamic) {
             var msg = 'Error when TinyUI is building xml file $xmlFile\nError: $e\nCallStack:' +
                 haxe.CallStack.toString(haxe.CallStack.exceptionStack());
@@ -46,24 +45,24 @@ class TinyUI {
 
     /** Position point to the xml file. we store this in a class var for convenient */
     var xmlPos: Position;
+    var xml: Xml;
     /** store the buiding fields */
     var buildingFields: Array<Field> = [];
     var localVarNameGen = new LocalVarNameGen();
-    var styles: Styles;
 
-    function new(xmlPos: Position, styles: Styles) {
+    function new(xmlPos: Position, xml: Xml) {
         this.xmlPos = xmlPos;
-        this.styles = styles;
+        this.xml = xml;
     }
 
     /** See build(String) */
-    function doBuild(xml: Xml): Array<Field> {        
+    function doBuild(): Array<Field> {
         //code for initUI() method
         var code = processNode(xml, "this", Context.getLocalType());
         
-        code += genUIModes(xml);
+        code += genUIModes();
 
-        buildingFields.push(genInitCode(xml, code));
+        buildingFields.push(genInitCode(code));
         
         saveCode(buildingFields);
 
@@ -99,15 +98,64 @@ class TinyUI {
                 case "new" | "var" | "var.field" | "function":
                     continue;
                 case "class":
-                    var styleXml = styles.getStyleXml(node);
+                    var styleXml = Styles.getStyleXml(this.xml, node);
                     code += processNode(styleXml, varName, tpe);
                 //ex: <Button label.text="'OK'" />
                 //or: <TextField setTextFormat="myFmt,1" />
                 default:
-                    code += varName + tpe.setOrCall(attr, node.get(attr));
+                    var value = node.get(attr);
+                    var field = findDotField(tpe, attr);
+                    if (field != null && field.isVar) {
+                        code += '$varName.$attr = $value;';
+                    } else {
+                        //if attr is not FVar then we expect it is a method or an extension method
+                        code += '$varName.$attr($value);';
+                    }
             }
         }
         return code;
+    }
+
+    /** check if `obj.dottedName` is a field with `obj` is an object of Type `tpe`
+      * @param dottedName dot-separated name. ex label.tex */
+    function findDotField(tpe: Type, dottedName: String): Null<MyClassField> {
+        var i = dottedName.indexOf(".");
+        var name = i == -1? dottedName : dottedName.substr(0, i);
+
+        //FIXME if tpe is not a TInst?
+        var clsField = tpe.getClass().findField(name);
+        var field: MyClassField = clsField == null? null :
+            {type: clsField.type, isVar: clsField.isVar()};
+
+        //workaround because we can't findField of the building class
+        //can not compare: tpe == Context.getLocalType()
+        if (field == null && Context.getLocalType().tpeEquals(tpe)) {
+            //1. check if name is declared in .xml ui file by attribute "var.field"
+            var node = this.xml.elements()
+                .find(function(child) return child.get("var.field") == name);
+            if (node != null) {
+                var tpeName = node.nodeName.startsWith("var.") ?
+                    node.nodeName.substr(4) : node.nodeName; //"var.".length == 4
+                field = {type: Context.getType(tpeName), isVar: true};
+            } else {
+                //2. check if name is declared in building class
+                var buildField = Context.getBuildFields()
+                    .find(function(f) return f.name == name);
+                if (buildField != null) {
+                    field = switch(buildField.kind) {
+                        case FVar(t, e) | FProp(_, _, t, e):
+                            var tpeOfField = t != null?
+                                t.toType() : Context.typeof(e);
+                            {type: tpeOfField, isVar: true};
+                        case FFun(_):
+                            {type: null, isVar: false};
+                    }
+                }
+            }
+        }
+        if (field == null || i == -1) return field;
+
+        return field.isVar? findDotField(field.type, dottedName.substr(i + 1)) : null;
     }
 
     static inline function getFnNodeArgs(node: Xml): Array<String> {
@@ -257,7 +305,7 @@ class TinyUI {
     function processFieldAccessNode(node: Xml, varName: String, tpe: Type): String {
         var code = "";
         var name = node.nodeName.substr(5);//"this.".length == 5
-        var field: ClassField = tpe.findDotField(name);
+        var field: MyClassField = findDotField(tpe, name);
         if (field == null) {
             var msg = 'Not found field $name of type $tpe when parsing $node.';
             var c = name.charAt(0);
@@ -266,13 +314,12 @@ class TinyUI {
             }
             throw msg;
         }
-        if (field.isVar()) {
-            var fieldTpe = field.type;
-            var childVarName = localVarNameGen.next(fieldTpe.baseType().name);
-            var newExpr = getNewExpr(node, fieldTpe);
+        if (field.isVar) {
+            var childVarName = localVarNameGen.next(field.type.baseType().name);
+            var newExpr = getNewExpr(node, field.type);
             code += 'var $childVarName = $newExpr;';
 
-            code += processNode(node, childVarName, fieldTpe);
+            code += processNode(node, childVarName, field.type);
             code += '$varName.$name = $childVarName;';
         } else {
             code += processNodeAsOneFnCall(node, varName);
@@ -299,7 +346,7 @@ class TinyUI {
     /** similar to: code += processVarOrViewItemNode(child);
       * but do not process: addChild, `new` expression, declaring var field.
       * @return code */
-    function processModeFor(xml: Xml, child: Xml, varName: String): String {
+    function processModeFor(child: Xml, varName: String): String {
         var itemNode = xml.elements().find(
             function (node) return varName == node.get("var") || varName == node.get("var.field")
         );
@@ -319,7 +366,7 @@ class TinyUI {
      * @param xml The view (root) node
      * @return code
      */
-    function genUIModes(xml: Xml): String {
+    function genUIModes(): String {
         var caseNodes = xml.elementsNamed("case");
         //if xml don't have modes node then return ""
         if (! caseNodes.hasNext()) {
@@ -399,14 +446,14 @@ class TinyUI {
 
                     case "in":
                         for(varName in child.get("var").split(",")) {
-                            code += processModeFor(xml, child, varName);
+                            code += processModeFor(child, varName);
                         }
 
                     case name if (name.startsWith("this.")):
                         code += processFieldAccessNode(child, "this", Context.getLocalType());
 
                     case varName:
-                        code += processModeFor(xml, child, varName); //"in.".length == 3
+                        code += processModeFor(child, varName); //"in.".length == 3
                 }
             }
         }
@@ -419,7 +466,7 @@ class TinyUI {
         return code;
     }
     
-    function genInitCode(xml: Xml, code: String): Field {
+    function genInitCode(code: String): Field {
         //get initUI arguments, ex: <UI function="w: Int, h: Int" ..>
         var args: String = xml.get("function");
         if (args == null) args = "";
@@ -507,6 +554,11 @@ class TinyUI {
 }
 
 class Tools {
+    public static function tpeEquals(t1: Type, t2: Type): Bool {
+        var b1 = t1.baseType(), b2 = t2.baseType();
+        if(b1 == null || b2 == null) return false;
+        return b1.name == b2.name && b1.module == b2.module && b1.pack.join('') == b2.pack.join('');
+    }
     public static function baseType(tpe: Type): Null<BaseType> {
         return switch(tpe) {
             case TEnum(t, _): t.get();
@@ -517,37 +569,11 @@ class Tools {
         }
     }
 
-    /** check if `obj.dottedName` is a field with `obj` is an object of Type `tpe`
-      * @param dottedName dot-separated name. ex label.tex */
-    public static function findDotField(tpe: Type, dottedName: String): Null<ClassField> {
-        var i = dottedName.indexOf(".");
-        var name = i == -1? dottedName : dottedName.substr(0, i);
-
-        //FIXME if tpe is not a TInst?
-        var field: ClassField = tpe.getClass().findField(name);
-
-        //FIXME Can't findField of building class
-//        if (field == null && tpe == Context.getLocalType()) {
-//            field = Context.getBuildFields();???
-//        }
-        if (field == null) return null;
-
-        return i == -1? field : switch(field.kind) {
-            case FVar(_): findDotField(field.type, dottedName.substr(i + 1));
-            default: null;
-        }
-    }
-
     public static inline function isVar(field: ClassField): Bool
         return field == null? false : switch(field.kind) {
             case FVar(_): true;
             default: false;
         }
-
-    /** if attr is not FVar then we expect it is a method or an extension method */
-    public static inline function setOrCall(tpe: Type, dottedName: String, value: String): String {
-        return tpe.findDotField(dottedName).isVar()? '.$dottedName = $value;' : '.$dottedName($value);';
-    }
 
     /**return the full pack + name of the Class `tpe`
      * tpe must represent a class. see haxe.macro.TypeTools.getClass */
@@ -580,6 +606,11 @@ class Tools {
         [for (child in x) if (child.nodeType == Element && child.nodeName == n) child];
 }
 
+private typedef MyClassField = {
+    var type : Type;
+    var isVar: Bool;
+}
+
 /** map from className to an auto-inc value
  * this is used to declare local variable names */
 private class LocalVarNameGen {
@@ -602,12 +633,6 @@ private class LocalVarNameGen {
 }
 
 private class Styles {
-    var xml: Xml;
-
-    public function new(xml: Xml) {
-        this.xml = xml;
-    }
-
     static function resolveStyleNode(xml: Xml, styleId: String, isExtStyleFile: Bool = false): Xml {
         function fromNode(x: Xml) return x.namedElemIterable(styleId);
 
@@ -633,8 +658,8 @@ private class Styles {
         return matchedStyles.first();
     }
 
-    function mergeStyle(styleId: String, ret: Xml, instanceNode: Xml, mergeToStyle: String = null) {
-        var styleNode = resolveStyleNode(this.xml, styleId);
+    static function mergeStyle(xml: Xml, styleId: String, ret: Xml, instanceNode: Xml, mergeToStyle: String = null) {
+        var styleNode = resolveStyleNode(xml, styleId);
 
         //clone attributes except "extends"
         //also check to not re-set the existed attr
@@ -666,16 +691,16 @@ private class Styles {
         var baseStyleIds = styleNode.get("extends");
         if (baseStyleIds != null)
             for(baseStyleId in baseStyleIds.split(","))
-                mergeStyle(baseStyleId, ret, instanceNode, styleId);
+                mergeStyle(xml, baseStyleId, ret, instanceNode, styleId);
     }
 
-    public function getStyleXml(node: Xml): Xml {
+    public static function getStyleXml(xml: Xml, node: Xml): Xml {
         var styleId = node.get("class");
         if(styleId == null) {
             throw 'node do not have `class` attribute! $node';
         }
         var ret = Xml.createElement("style");
-        mergeStyle(styleId, ret, node);
+        mergeStyle(xml, styleId, ret, node);
         return ret;
     }
 }

@@ -44,16 +44,14 @@
     <!--
         b. (for complex prop/method)
         + node name in format: `this.` + <prop/method name>-->
-<!-- FIXME error access field of building class
     <this.myFmt color="0xFF0000" align="CENTER" />
-    &lt;!&ndash;    note: attribute names is not important, only the order of attributes is &ndash;&gt;
+    <!--    note: attribute names is not important, only the order of attributes is -->
     <this.myMethod i="2" msg="'msg2'" />
-    &lt;!&ndash;    note: you can use child node of `method call node` for complex arguments &ndash;&gt;
+    <!--    note: you can use child node of `method call node` for complex arguments -->
     <this.complexMethod i1="1">
         <TextFormat size="22" align="RIGHT" />
         <this i2="2" />
     </this.complexMethod>
--->
 
     <!--    note:
             + you can access prop/method of every object, not only the view object.

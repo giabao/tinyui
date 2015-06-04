@@ -37,6 +37,15 @@ class UI18All extends Sprite {
 		this.y = 3;
 		this.simpleMethod("message 2");
 		this.myMethod(1, "msg1");
+		var __uiTextFormat1 = new flash.text.TextFormat();
+		__uiTextFormat1.color = 0xFF0000;
+		__uiTextFormat1.align = CENTER;
+		this.myFmt = __uiTextFormat1;
+		this.myMethod(2, "msg2");
+		var __uiTextFormat2 = new flash.text.TextFormat();
+		__uiTextFormat2.size = 22;
+		__uiTextFormat2.align = RIGHT;
+		this.complexMethod(1, __uiTextFormat2, 2);
 		var myBmp = new flash.display.Bitmap();
 		myBmp.x = 5;
 		myBmp.src("img/sd.jpg");
@@ -48,10 +57,10 @@ class UI18All extends Sprite {
 		this.myTxt.x = 100;
 		this.myTxt.defaultTextFormat = tmpFmt;
 		this.myTxt.text = "my text";
-		var __uiTextFormat1 = new flash.text.TextFormat();
-		__uiTextFormat1.font = "Tahoma";
-		__uiTextFormat1.size = 13;
-		this.myTxt.setTextFormat(__uiTextFormat1, 3, 5);
+		var __uiTextFormat3 = new flash.text.TextFormat();
+		__uiTextFormat3.font = "Tahoma";
+		__uiTextFormat3.size = 13;
+		this.myTxt.setTextFormat(__uiTextFormat3, 3, 5);
 		this.myTxt.appendText(" appended");
 		this.addChild(this.myTxt);
 		var mySpr = new flash.display.Sprite();
@@ -68,33 +77,33 @@ class UI18All extends Sprite {
 		this.addChild(__uiSprite1);
 		var __uiTextField2 = new flash.text.TextField();
 		__uiTextField2.backgroundColor = 0;
-		var __uiTextFormat2 = new flash.text.TextFormat();
-		__uiTextFormat2.color = 0xff0000;
-		__uiTextField2.defaultTextFormat = __uiTextFormat2;
+		var __uiTextFormat4 = new flash.text.TextFormat();
+		__uiTextFormat4.color = 0xff0000;
+		__uiTextField2.defaultTextFormat = __uiTextFormat4;
 		__uiTextField2.text = "Text 1";
 		this.addChild(__uiTextField2);
 		var __uiTextField3 = new flash.text.TextField();
 		__uiTextField3.text = "Text 2";
 		__uiTextField3.selectable = false;
-		var __uiTextFormat3 = new flash.text.TextFormat();
-		__uiTextFormat3.color = 0x00ff00;
-		__uiTextFormat3.bold = true;
-		__uiTextField3.defaultTextFormat = __uiTextFormat3;
+		var __uiTextFormat5 = new flash.text.TextFormat();
+		__uiTextFormat5.color = 0x00ff00;
+		__uiTextFormat5.bold = true;
+		__uiTextField3.defaultTextFormat = __uiTextFormat5;
 		this.addChild(__uiTextField3);
 		var __uiTextField4 = new flash.text.TextField();
 		__uiTextField4.selectable = false;
-		var __uiTextFormat4 = new flash.text.TextFormat();
-		__uiTextFormat4.color = 0xff0000;
-		__uiTextField4.defaultTextFormat = __uiTextFormat4;
+		var __uiTextFormat6 = new flash.text.TextFormat();
+		__uiTextFormat6.color = 0xff0000;
+		__uiTextField4.defaultTextFormat = __uiTextFormat6;
 		__uiTextField4.text = "Text 3";
 		__uiTextField4.backgroundColor = 0x0000FF;
 		this.addChild(__uiTextField4);
 		for (i in 1 ... 4) {
 			var __uiTextField5 = new flash.text.TextField();
 			__uiTextField5.y = i * 25;
-			var __uiTextFormat5 = new flash.text.TextFormat();
-			__uiTextFormat5.color = 0xFF0000;
-			__uiTextField5.defaultTextFormat = __uiTextFormat5;
+			var __uiTextFormat7 = new flash.text.TextFormat();
+			__uiTextFormat7.color = 0xFF0000;
+			__uiTextField5.defaultTextFormat = __uiTextFormat7;
 			__uiTextField5.text = "some text";
 			this.addChild(__uiTextField5);
 		};
@@ -159,7 +168,7 @@ class UI18All extends Sprite {
         trace(msg);
     }
     function myMethod(i1: Int, msg: String){ }
-    function complexMethod2(i1: Int, tf: TextFormat, i2: Int){ }
+    function complexMethod(i1: Int, tf: TextFormat, i2: Int){ }
     function methodCreateSprite(): Sprite {
         return new Sprite();
     }
