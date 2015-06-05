@@ -1,6 +1,11 @@
 ## Changelogs
 we use [Semantic Versioning](http://semver.org/)
 
+#### 5.0.1
++ now you can switch configs for normal build or bypass TinyUI.build & using the generated code.
+
++ warning if tinyui can not found property/ method/ extension method when parsing xml
+
 #### 5.0.0
 we break change again :(
 This time, I think the syntax for declaring ui in xml in tinyui is stable (not be changed again :d)

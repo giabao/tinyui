@@ -4,7 +4,7 @@
   "license"      : "MIT",
   "tags"         : ["cross", "openfl", "flash", "html5", "cpp", "ui", "macro", "layout"],
   "description"  : "A tiny UI macro for injecting ui items declared in a xml file into a haxe class.",
-  "version"      : "5.0.0",
+  "version"      : "5.0.1",
   "releasenote"  : "Stable. see CHANGES.md",
   "classPath"    : "main/src",
   "contributors" : ["SanDinh.com"],
