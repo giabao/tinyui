@@ -25,5 +25,8 @@
 	
 	<!-- optimize output
 	<haxeflag name="-dce full" /> -->
-    <haxeflag name="--macro" value="TinyUI.saveCodeTo('ui-codegen')"/>
+
+    <!--switch the following configs for normal build or bypass TinyUI.build & using the generated code-->
+    <haxeflag name="--macro" value="TinyUI.saveCodeTo('ui-codegen', ['ui-src'])"/>
+    <!--<haxeflag name="&#45;&#45;macro" value="TinyUI.saveCodeTo('ui-codegen', ['ui-src'], true)"/>-->
 </project>

@@ -1,4 +1,5 @@
 #if macro
+import haxe.macro.Compiler;
 import haxe.macro.Type;
 import haxe.macro.Type.TVar;
 import haxe.macro.Type.TType;
@@ -18,18 +19,45 @@ using haxe.macro.Tools;
 
 class TinyUI {
     static var genCodeDir: String = null;
+    static var useGeneratedCode: Bool;
     static inline var CodeGenBegin = "\n\t//++++++++++ code gen by tinyui ++++++++++//\n\t";
     static inline var CodeGenEnd = "\n\t//---------- code gen by tinyui ----------//\n";
 
-    /** Set directory to save generated code to. Should be called in */
-    macro public static function saveCodeTo(dir: String): Void {
-        if (! dir.endsWith("/")) dir = dir + "/";
-        genCodeDir = dir;
+    /** Config TinyUI.
+      * @param genCodeDir - the directory to save generated code to.
+      * @param uiSrcDirs - array of source dir contains only .hx view files
+      *     need to be built using @:build(TinyUI.build(<the-xml-file>)).
+      * @param useGeneratedCode -
+      *     = false (default) for normal @build. uiSrcDirs will be add to class path (Compiler.addClassPath)
+      *     = true to bypass TinyUI.build function.
+      *         We will use the generated code when compiling: Compiler.addClassPath(genCodeDir)
+      *
+      * usage, ex with openfl: add to using openfl project.xml file:
+      * ```xml
+      * <!--switch the following configs for normal build or bypass TinyUI.build & using the generated code-->
+      * <haxeflag name="--macro" value="TinyUI.saveCodeTo('ui-codegen', ['ui-src'])"/>
+      * <!--<haxeflag name="&#45;&#45;macro" value="TinyUI.saveCodeTo('ui-codegen', ['ui-src'], true)"/>-->
+      * ``` */
+    macro public static function saveCodeTo(genCodeDir: String,
+                                            uiSrcDirs: Array<String> = null,
+                                            useGeneratedCode: Bool = false): Void {
+        TinyUI.useGeneratedCode = useGeneratedCode;
+        if (useGeneratedCode) {
+            Compiler.addClassPath(genCodeDir);
+        } else if (FileSystem.exists(genCodeDir)) {
+            TinyUI.genCodeDir = genCodeDir.endsWith("/")? genCodeDir : genCodeDir + "/";
+            if (uiSrcDirs != null) {
+                uiSrcDirs.iter(Compiler.addClassPath);
+            }
+            Tools.delDirRecursive(genCodeDir);
+        }
     }
 
     /** Inject fields declared in `xmlFile` and generate `initUI()` function for the macro building class.
       * See test/some-view.xml & test/SomeView.hx for usage. */
     macro public static function build(xmlFile: String): Array<Field> {
+        if (useGeneratedCode) return null;
+
         var xml = Tools.parseXml(xmlFile);
         try {
             var xmlPos = Context.makePosition( { min:0, max:0, file:xmlFile } );
@@ -103,8 +131,13 @@ class TinyUI {
                 //ex: <Button label.text="'OK'" />
                 //or: <TextField setTextFormat="myFmt,1" />
                 default:
-                    var value = node.get(attr);
                     var field = findDotField(tpe, attr);
+                    if (field == null) {
+                        var msg = 'Not found field $attr of type $tpe when parsing attributes of node ${node.nodeName}'
+                            + ". Are you using static extension method?";
+                        Context.warning(msg, xmlPos);
+                    }
+                    var value = node.get(attr);
                     if (field != null && field.isVar) {
                         code += '$varName.$attr = $value;';
                     } else {
@@ -153,9 +186,46 @@ class TinyUI {
                 }
             }
         }
+        //try check static extension methods
+        if (field == null) {
+            //Note that, when call `Context.getLocalUsing()`,
+            // some static variable of the using class that need initialized will throw error.
+            //ex: if class com.sandinh.TipTools (in haxelib openfl-tooltip) declare var:
+            //  static var tip = new Tip();
+            //then an error will be thrown :(
+            for (f in Context.getLocalUsing().flatMap(staticFieldsOf))
+                if (f.name == name && f.isPublic && !f.isVar()) {
+                    var arg1Tpe = arg1TypeOfFun(f.type);
+                    //we just TRY. If can't (arg1Tpe == null) then we assume that field is a method
+                    if (arg1Tpe == null || Context.unify(tpe, arg1Tpe)) {
+                        field = {type: null, isVar: false};
+                        break;
+                    }
+                }
+        }
         if (field == null || i == -1) return field;
 
         return field.isVar? findDotField(field.type, dottedName.substr(i + 1)) : null;
+    }
+
+    static function staticFieldsOf(ref: Ref<ClassType>): Array<ClassField> {
+        return ref.get().statics.get();
+    }
+
+    static function arg1TypeOfFun(tpe: Type): Null<Type> {
+        return switch(tpe) {
+            case TFun(args, _):
+                args.length == 0? null : args[0].t;
+            case TLazy(f):
+                //will throw at com.sandinh.ui.BitmapTools.src:
+                //  Class<openfl.Assets> has no field getBitmapData
+                //I guess this is because getBitmapData is only defined #if !macro
+                //  and the error is throw when we call `f()`
+                //arg1TypeOfFun(f());
+                null;
+            //case TType(_): tpe;
+            case _: tpe;
+        }
     }
 
     static inline function getFnNodeArgs(node: Xml): Array<String> {
@@ -512,24 +582,35 @@ class TinyUI {
             return;
         }
         //1. calculate the path of the file we need to save, and create its parent directory if not exists
-        var module = Context.getLocalModule().replace(".", "/");
-        var saveFile = genCodeDir + module;
-        var saveDir = saveFile.substr(0, saveFile.lastIndexOf("/"));
-        if (!FileSystem.exists(saveDir)) {
-            FileSystem.createDirectory(saveDir);
+        inline function prepareDestFile(): String {
+            var module = Context.getLocalModule().replace(".", "/");
+            var file = genCodeDir + module;
+            var saveDir = file.substr(0, file.lastIndexOf("/"));
+            if (!FileSystem.exists(saveDir)) {
+                FileSystem.createDirectory(saveDir);
+            }
+            return file + ".hx";
         }
+        var saveFile = prepareDestFile();
 
         //2. Get content of building file. We will save this content and the generated fields to the saveFile
-        var pos = Context.getPosInfos(Context.currentPos());
-        var content = File.getContent(pos.file);
-        
+        inline function getContent(): String {
+            //genCodeDir is delete in method `saveCodeTo`.
+            //saveFile exist here when it contain multiple building class
+            var file = FileSystem.exists(saveFile)? saveFile : Context.getPosInfos(Context.currentPos()).file;
+            return File.getContent(file);
+        }
+        var content = getContent();
+
         //3. find index in content that we will insert the generated code
-        var className = Context.getLocalClass().get().name;
-        var reg = new EReg(".*class\\s+" + className + "[^{]*{", "g");
-        var subLenToMatch = Math.min(content.length - pos.max, 200);
-        reg.matchSub(content, pos.max, Std.int(subLenToMatch));
-        var matchedPos = reg.matchedPos();
-        var codeGenIdx = matchedPos.len + matchedPos.pos;
+        inline function getCodeGenIdx(): Int {
+            var className = Context.getLocalClass().get().name;
+            var reg = new EReg(".*class\\s+" + className + "\\s+extends\\s+[^{]*{", "g");
+            reg.match(content);
+            var matchedPos = reg.matchedPos();
+            return matchedPos.pos + matchedPos.len;
+        }
+        var codeGenIdx =getCodeGenIdx();
         
         //4. Generate code
         var code = fields.map(function(f: Field) {
@@ -544,16 +625,29 @@ class TinyUI {
         var buf = new StringBuf();
         buf.addSub(content, 0, codeGenIdx);
         buf.add(CodeGenBegin);
-        buf.add(code.split("\n").join("\n\t"));
+        buf.add(code.replace("\n", "\n\t"));
         buf.add(CodeGenEnd);
         buf.addSub(content, codeGenIdx);
         
         //6. Save file
-        File.saveContent(saveFile + ".hx", buf.toString());
+        File.saveContent(saveFile, buf.toString());
     }
 }
 
 class Tools {
+    /** this method not check path exists & isDirectory */
+    @noUsing public static function delDirRecursive(path: String) {
+        for (item in FileSystem.readDirectory(path)) {
+            var child = path + '/' + item;
+            if (FileSystem.isDirectory(child)) {
+                delDirRecursive(child);
+            } else {
+                FileSystem.deleteFile(child);
+            }
+        }
+        FileSystem.deleteDirectory(path);
+    }
+
     public static function tpeEquals(t1: Type, t2: Type): Bool {
         var b1 = t1.baseType(), b2 = t2.baseType();
         if(b1 == null || b2 == null) return false;
