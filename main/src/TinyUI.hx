@@ -44,12 +44,15 @@ class TinyUI {
         TinyUI.useGeneratedCode = useGeneratedCode;
         if (useGeneratedCode) {
             Compiler.addClassPath(genCodeDir);
-        } else if (FileSystem.exists(genCodeDir)) {
+        } else {
             TinyUI.genCodeDir = genCodeDir.endsWith("/")? genCodeDir : genCodeDir + "/";
             if (uiSrcDirs != null) {
                 uiSrcDirs.iter(Compiler.addClassPath);
             }
-            Tools.delDirRecursive(genCodeDir);
+
+            if (FileSystem.exists(genCodeDir)) {
+                Tools.delDirRecursive(genCodeDir);
+            }
         }
     }
 
