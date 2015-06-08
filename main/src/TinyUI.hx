@@ -1,4 +1,8 @@
 #if macro
+import tink.macro.ClassBuilder;
+import tink.syntaxhub.FrontendContext;
+import tink.syntaxhub.FrontendPlugin;
+import tink.SyntaxHub;
 import haxe.macro.Compiler;
 import haxe.macro.Type;
 import haxe.macro.Type.TVar;
@@ -16,8 +20,9 @@ using com.sandinh.core.LambdaEx;
 using StringTools;
 using TinyUI.Tools;
 using haxe.macro.Tools;
+using tink.MacroApi;
 
-class TinyUI {
+class TinyUI implements FrontendPlugin {
     static var genCodeDir: String = null;
     static var useGeneratedCode: Bool;
     static inline var CodeGenBegin = "\n\t//++++++++++ code gen by tinyui ++++++++++//\n\t";
@@ -38,9 +43,9 @@ class TinyUI {
       * <haxeflag name="--macro" value="TinyUI.saveCodeTo('ui-codegen', ['ui-src'])"/>
       * <!--<haxeflag name="&#45;&#45;macro" value="TinyUI.saveCodeTo('ui-codegen', ['ui-src'], true)"/>-->
       * ``` */
-    macro public static function saveCodeTo(genCodeDir: String,
-                                            uiSrcDirs: Array<String> = null,
-                                            useGeneratedCode: Bool = false): Void {
+    public static function saveCodeTo(genCodeDir: String,
+                                      uiSrcDirs: Array<String> = null,
+                                      useGeneratedCode: Bool = false): Void {
         TinyUI.useGeneratedCode = useGeneratedCode;
         if (useGeneratedCode) {
             Compiler.addClassPath(genCodeDir);
@@ -54,50 +59,56 @@ class TinyUI {
                 Tools.delDirRecursive(genCodeDir);
             }
         }
+
+        SyntaxHub.frontends.whenever(new TinyUI());
+        SyntaxHub.classLevel.whenever(build);
     }
 
-    /** Inject fields declared in `xmlFile` and generate `initUI()` function for the macro building class.
-      * See test/some-view.xml & test/SomeView.hx for usage. */
-    macro public static function build(xmlFile: String): Array<Field> {
-        if (useGeneratedCode) return null;
+    public function extensions() return ['xml'].iterator();
 
-        var xml = Tools.parseXml(xmlFile);
-        try {
-            var xmlPos = Context.makePosition( { min:0, max:0, file:xmlFile } );
-            var tinyUI = new TinyUI(xmlPos, xml);
-            return tinyUI.doBuild();
-        } catch (e: Dynamic) {
-            var msg = 'Error when TinyUI is building xml file $xmlFile\nError: $e\nCallStack:' +
-                haxe.CallStack.toString(haxe.CallStack.exceptionStack());
-            Context.fatalError(msg, Context.currentPos());
-            return null;
-        }
+    public function parse(file:String, context:FrontendContext): Void {
+        Context.warning('parse $file', Context.currentPos());
+        //TODO impl
+    }
+
+    /** Inject fields declared in `xmlFile` and generate `initUI()` function for the macro building class. */
+    static function build(builder: ClassBuilder): Bool {
+        if (useGeneratedCode) return false;
+
+        var uiMetas = builder.target.meta.extract(":tinyui");
+        if (uiMetas.length == 0) return false;
+        var xmlFile: String = uiMetas[0].params[0].getValue();
+        var tinyUI = new TinyUI();
+        tinyUI.init(xmlFile, builder);
+        tinyUI.doBuild();
+        return true;
     }
 
     /** Position point to the xml file. we store this in a class var for convenient */
     var xmlPos: Position;
     var xml: Xml;
-    /** store the buiding fields */
-    var buildingFields: Array<Field> = [];
+    var builder: ClassBuilder;
+
     var localVarNameGen = new LocalVarNameGen();
 
-    function new(xmlPos: Position, xml: Xml) {
-        this.xmlPos = xmlPos;
-        this.xml = xml;
+    function new(){}
+
+    function init(xmlFile: String, builder: ClassBuilder) {
+        this.xmlPos = Context.makePosition( { min:0, max:0, file:xmlFile } );
+        this.xml = Tools.parseXml(xmlFile);
+        this.builder = builder;
     }
 
     /** See build(String) */
-    function doBuild(): Array<Field> {
+    function doBuild(): Void {
         //code for initUI() method
         var code = processNode(xml, "this", Context.getLocalType());
         
         code += genUIModes();
 
-        buildingFields.push(genInitCode(code));
+        addInitCode(code);
         
-        saveCode(buildingFields);
-
-        return Context.getBuildFields().concat(buildingFields);
+        saveCode();
     }
     
     /** Get "new" expression to create an instance of className.
@@ -125,7 +136,7 @@ class TinyUI {
             switch(attr) {
                 //"new" attribute is processed in `processNode` method.
                 //"var", "var.field" attribute is processed in `processNode` method.
-                //"function" attribute of root node is processed in `genInitCode` method.
+                //"function" attribute of root node is processed in `addInitCode` method.
                 case "new" | "var" | "var.field" | "function":
                     continue;
                 case "class":
@@ -175,13 +186,12 @@ class TinyUI {
                 field = {type: Context.getType(tpeName), isVar: true};
             } else {
                 //2. check if name is declared in building class
-                var buildField = Context.getBuildFields()
-                    .find(function(f) return f.name == name);
+                var buildField = builder.memberByName(name).orNull();
                 if (buildField != null) {
                     field = switch(buildField.kind) {
                         case FVar(t, e) | FProp(_, _, t, e):
                             var tpeOfField = t != null?
-                                t.toType() : Context.typeof(e);
+                                t.toType().sure() : Context.typeof(e);
                             {type: tpeOfField, isVar: true};
                         case FFun(_):
                             {type: null, isVar: false};
@@ -292,7 +302,7 @@ class TinyUI {
             if (baseType == null) {
                 Context.error('Can not find type $className', xmlPos);
             }
-            buildingFields.push({
+            builder.addMember({
                 pos    : xmlPos,
                 name   : childVarName,
                 access : [APublic], //TODO support asses, doc, meta?
@@ -323,7 +333,7 @@ class TinyUI {
     }
     
     /** loop throught xml node recursively and generate haxe code for initUI function.
-     * This method also push Fields to `buildingFields` if ctx is ViewItem and the ViewItem node has `var` attribute.
+     * This method also push Fields to `builder` if ctx is ViewItem and the ViewItem node has `var` attribute.
      * @param node - the current xml node we are processing when looping.
      * @param varName - the variable name corresponding to the current node.
      *        for root node, varName is "this".
@@ -401,7 +411,7 @@ class TinyUI {
     }
 
     /**push `public static inline var UI_$modeName: Int = ${auto_inc value - start at 0}`
-     * for all modeName found in `caseNode` into buildingField */
+     * for all modeName found in `caseNode` into `builder` */
     function pushUIModeFields(caseNode: Xml) {
         function toField(mode: String, value: Int): Field {
             return {
@@ -413,7 +423,7 @@ class TinyUI {
         }
         var v = 0;
         for (node in caseNode.elements())
-            buildingFields.push(toField(node.nodeName, v++));
+            builder.addMember(toField(node.nodeName, v++));
     }
 
     /** similar to: code += processVarOrViewItemNode(child);
@@ -453,7 +463,7 @@ class TinyUI {
         pushUIModeFields(caseNode);
 
         //public var uiMode(default, set): Int = -1;
-        buildingFields.push({
+        builder.addMember({
             pos : xmlPos,
             name : "uiMode",
             access : [APublic],
@@ -464,7 +474,7 @@ class TinyUI {
         });
         
         //var _set_uiMode: Int -> Void;
-        buildingFields.push({
+        builder.addMember({
                             pos    : xmlPos,
                             name   : "_set_uiMode",
                             kind   : FVar(TFunction(
@@ -490,8 +500,8 @@ class TinyUI {
             case EFunction(_,f) : f;
             default: null;
         }
-        
-        buildingFields.push({
+
+        builder.addMember({
             pos    : xmlPos,
             name   : "set_uiMode",
             kind   : FFun({
@@ -539,48 +549,76 @@ class TinyUI {
         return code;
     }
     
-    function genInitCode(code: String): Field {
-        //get initUI arguments, ex: <UI function="w: Int, h: Int" ..>
-        var args: String = xml.get("function");
-        if (args == null) args = "";
-
-        var isOverride = Context.getLocalClass().get().findField("initUI") != null;
-            
-        if (isOverride) {
-            var argNames: String = args.split(",")
-                .map(function(s) return s.substr(0, s.indexOf(":")))
-                .join(",");
-            code = 'super.initUI($argNames);' + code;
+    function addInitCode(code: String): Void {
+        //get initUI function name and arguments
+        var fnName = xml.get("function");
+        var args = "";
+        if (fnName == null || fnName.trim() == "") {
+            fnName = "initUI"; //default is "initUI()"
+        } else {
+            var i = fnName.indexOf("(");
+            if (i == -1) {
+                if (fnName.indexOf(":") != -1) { //ex: "w: Int, h: Int"
+                    args = fnName;
+                    fnName = "initUI";
+                }//else, ex: "new", then do nothing
+            } else { //ex: "new ( w: Int) | "new()"
+                args = fnName.substring(i + 1, fnName.length - 1).ltrim();
+                fnName = fnName.substr(0, i).rtrim();
+            }
         }
-        
+
         //generate dummy function to extract expressions
-        var dummy : Expr = try {
-            Context.parse('function ($args) { $code }', xmlPos);
-        } catch (e: Dynamic) {
-            Context.error('There are some error when parse the code generated from xml.\nError: $e\nCode:\n$code', xmlPos);
+        function getDummyFn(): Function {
+            var dummy : Expr = try {
+                Context.parse('function ($args) { $code }', xmlPos);
+            } catch (e: Dynamic) {
+                Context.error('There are some error when parse the code generated from xml.\nError: $e\nCode:\n$code', xmlPos);
+            }
+
+            //extract function
+            return switch(dummy.expr){
+                case EFunction(_,f) : f;
+                default: null;
+            }
         }
 
-        //extract function
-        var fun : Function = switch(dummy.expr){
-            case EFunction(_,f) : f;
-            default: null;
+        if (fnName == "new") {
+            var fun = getDummyFn();
+            var ctor = builder.getConstructor();
+            for (a in fun.args) {
+                ctor.addArg(a.name, a.type, a.value, a.opt);
+            }
+            switch fun.expr {
+                case {expr: EBlock(exprs)}:
+                    for(e in exprs) ctor.addStatement(e);
+                case e:
+                    ctor.addStatement(e);
+            }
+        } else {
+            if (builder.hasSuperField(fnName)) {
+                var argNames = args.split(",")
+                    .map(function(s) return s.substr(0, s.indexOf(":")))
+                    .join(",");
+                code = 'super.$fnName($argNames);' + code;
+            }
+            var fun = getDummyFn();
+            builder.addMember({
+                pos    : xmlPos,
+                name   : fnName,
+                access : [APublic],
+                kind   : FFun({
+                    ret    : null,
+                    expr   : fun.expr,
+                    args   : fun.args
+                })
+            });
         }
-        
-        return {
-            pos    : xmlPos,
-            name   : "initUI",
-            access : isOverride? [AOverride, APublic] : [APublic],
-            kind   : FFun({
-                ret    : null,
-                expr   : fun.expr,
-                args   : fun.args
-            })
-        };
     }
     
     /** Note: current impl is not correct if there are >1 building classes in one module (file)
      * (in haxe, a .hx file is corresponds to a module) */
-    function saveCode(fields: Array<Field>) {
+    function saveCode() {
         if (genCodeDir == null) {
             return;
         }
@@ -600,7 +638,8 @@ class TinyUI {
         inline function getContent(): String {
             //genCodeDir is delete in method `saveCodeTo`.
             //saveFile exist here when it contain multiple building class
-            var file = FileSystem.exists(saveFile)? saveFile : Context.getPosInfos(Context.currentPos()).file;
+            var file = FileSystem.exists(saveFile)?
+                saveFile : builder.target.pos.getInfos().file;
             return File.getContent(file);
         }
         var content = getContent();
@@ -613,9 +652,17 @@ class TinyUI {
             var matchedPos = reg.matchedPos();
             return matchedPos.pos + matchedPos.len;
         }
-        var codeGenIdx =getCodeGenIdx();
+        var codeGenIdx = getCodeGenIdx();
         
         //4. Generate code
+        var hasCtor = Context.getBuildFields()
+            .exists(function(f) return f.name == "new");
+        var fields = builder.iterator()
+            .skip(Context.getBuildFields().length - (hasCtor? 1 : 0))
+            .list();
+        if (! hasCtor && builder.hasConstructor()) {
+            fields.push(builder.getConstructor().toHaxe());
+        }
         var code = fields.map(function(f: Field) {
             var s = new Printer().printField(f);
             return switch(f.kind) {
@@ -665,12 +712,6 @@ class Tools {
             case _: null;
         }
     }
-
-    public static inline function isVar(field: ClassField): Bool
-        return field == null? false : switch(field.kind) {
-            case FVar(_): true;
-            default: false;
-        }
 
     /**return the full pack + name of the Class `tpe`
      * tpe must represent a class. see haxe.macro.TypeTools.getClass */

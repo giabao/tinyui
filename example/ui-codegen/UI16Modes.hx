@@ -7,7 +7,7 @@ import openfl.events.MouseEvent;
 
 using com.sandinh.ui.BitmapTools;
 
-@:build(TinyUI.build('ui/16-modes.xml'))
+@:tinyui('ui/16-modes.xml')
 class UI16Modes extends Sprite {
 	//++++++++++ code gen by tinyui ++++++++++//
 	public static inline var UI_M1 : Int = 0;

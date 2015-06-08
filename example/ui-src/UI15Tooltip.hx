@@ -4,7 +4,7 @@ import openfl.text.TextFormat;
 
 using com.sandinh.TipTools;
 
-@:build(TinyUI.build('ui/15-tooltip.xml'))
+@:tinyui('ui/15-tooltip.xml')
 class UI15Tooltip extends Sprite {
     
     public function new() {

@@ -9,6 +9,7 @@
   "classPath"    : "main/src",
   "contributors" : ["SanDinh.com"],
   "dependencies" : {
-    "openfl"        : ""
+    "openfl"     : "",
+    "tink_syntaxhub" : ""
   }
 }

@@ -275,3 +275,10 @@ class LambdaIterator {
 		return l;
 	}
 }
+
+class LambdaIteratorEx {
+	public static function skip<T>(it : Iterator<T>, n: Int): Iterator<T> {
+		for(i in 0...n) it.next();
+		return it;
+	}
+}

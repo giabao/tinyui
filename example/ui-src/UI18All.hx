@@ -9,7 +9,7 @@ using com.sandinh.ui.BitmapTools;
 using com.sandinh.TipTools;
 using layout.LayoutUtils;
 
-@:build(TinyUI.build('ui/18-all.xml'))
+@:tinyui('ui/18-all.xml')
 class UI18All extends Sprite {
     public function new() {
         super();

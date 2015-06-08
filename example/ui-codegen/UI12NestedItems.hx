@@ -1,7 +1,7 @@
 import openfl.text.TextField;
 import openfl.display.Sprite;
 
-@:build(TinyUI.build('ui/12-nested-items.xml'))
+@:tinyui('ui/12-nested-items.xml')
 class UI12NestedItems extends Sprite {
 	//++++++++++ code gen by tinyui ++++++++++//
 	public function initUI() {

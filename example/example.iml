@@ -69,5 +69,49 @@
         </SOURCES>
       </library>
     </orderEntry>
+    <orderEntry type="module-library">
+      <library name="haxelib|C:/HaxeToolkit/haxe/lib/tink_macro/0,6,4/src">
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/../../../tink_macro/0,6,4/src" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/../../../tink_macro/0,6,4/src" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="haxelib|C:/HaxeToolkit/haxe/lib/tink_core/1,0,0-rc,11/src">
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/../../../tink_core/1,0,0-rc,11/src" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/../../../tink_core/1,0,0-rc,11/src" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="haxelib|C:/HaxeToolkit/haxe/lib/tink_syntaxhub/0,3,0/src">
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/../../../tink_syntaxhub/0,3,0/src" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/../../../tink_syntaxhub/0,3,0/src" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="haxelib|C:/HaxeToolkit/haxe/lib/tink_priority/0,1,2/src">
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/../../../tink_priority/0,1,2/src" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/../../../tink_priority/0,1,2/src" />
+        </SOURCES>
+      </library>
+    </orderEntry>
   </component>
 </module>
