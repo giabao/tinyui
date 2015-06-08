@@ -23,6 +23,7 @@ using haxe.macro.Tools;
 using tink.MacroApi;
 
 class TinyUI implements FrontendPlugin {
+    static inline var tmpCodeDir = "bin/tinyui/";
     static var genCodeDir: String = null;
     static var useGeneratedCode: Bool;
     static inline var CodeGenBegin = "\n\t//++++++++++ code gen by tinyui ++++++++++//\n\t";
@@ -58,17 +59,51 @@ class TinyUI implements FrontendPlugin {
             if (FileSystem.exists(genCodeDir)) {
                 Tools.delDirRecursive(genCodeDir);
             }
+
+            Compiler.addClassPath(tmpCodeDir);
+            if (FileSystem.exists(tmpCodeDir)) {
+                Tools.delDirRecursive(tmpCodeDir);
+            }
         }
 
-        SyntaxHub.frontends.whenever(new TinyUI());
         SyntaxHub.classLevel.whenever(build);
+        SyntaxHub.frontends.whenever(new TinyUI());
     }
 
-    public function extensions() return ['xml'].iterator();
+    public function extensions() return ["xml"].iterator();
 
-    public function parse(file:String, context:FrontendContext): Void {
-        Context.warning('parse $file', Context.currentPos());
-        //TODO impl
+    public function parse(file: String, ctx: FrontendContext): Void {
+        function getSaveFile(): String {
+            var saveDir = tmpCodeDir + ctx.pack.join("/");
+            if (!FileSystem.exists(saveDir)) {
+                FileSystem.createDirectory(saveDir);
+            }
+            return saveDir + "/" + ctx.name + ".hx";
+        }
+
+        var code = "package " + ctx.pack.join(".") + ";\n\n";
+
+        function addImport(node: Xml) {
+            var mode = node.nodeName;
+            for(a in node.attributes()) {
+                for(name in node.get(a).split(",")) {
+                    name = name.trim();
+                    code += '$mode $a.$name;\n';
+                }
+            }
+        }
+
+        this.xml = Tools.parseXml(file);
+        this.xml.elementsNamed("import").iter(addImport);
+        code += "\n";
+        this.xml.elementsNamed("using").iter(addImport);
+
+        code += '\n@:tinyui("$file")\n';
+        code += "class " + ctx.name + " extends " + this.xml.nodeName + " {\n}\n";
+
+        File.saveContent(getSaveFile(), code);
+
+        ctx.getType(); //need call getType() for SyntaxHub to work
     }
 
     /** Inject fields declared in `xmlFile` and generate `initUI()` function for the macro building class. */
@@ -367,8 +402,9 @@ class TinyUI implements FrontendPlugin {
                     }
                     //will be process later in `genUIMode` method
 
-                case ["class", _]:
-                    //process in attr2Haxe
+                case ["class" | "import" | "using", _]:
+                    //"class" is processed in `attr2Haxe`
+                    //"import" | "using" are processed in `parse`
 
                 //setting var or calling method
                 //name is var or method name

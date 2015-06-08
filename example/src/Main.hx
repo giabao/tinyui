@@ -18,6 +18,7 @@ import UI15Tooltip;
 import UI16Modes;
 import UI17Styles;
 import UI18All;
+import com.sandinh.XmlOnlyView;
 
 class Main extends Sprite {
     public function new() {

@@ -1,0 +1,11 @@
+<Sprite function="new">
+    <import openfl.display="Sprite, Bitmap as Bmp"
+            openfl.text="TextField, TextFormatAlign.*"/>
+    <using com.sandinh.ui="BitmapTools" />
+
+    <Bmp src="'img/sd.jpg'" />
+    <TextField var.field="txt">
+        <this.defaultTextFormat size="20" align="CENTER" />
+        <this text="'Hi TinyUI!'" />
+    </TextField>
+</Sprite>
