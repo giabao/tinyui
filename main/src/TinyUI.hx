@@ -9,6 +9,8 @@ import haxe.macro.Expr;
 import sys.io.File;
 import sys.FileSystem;
 import _tinyui.*;
+import neko.Lib.println;
+import haxe.CallStack;
 
 using Lambda;
 using com.sandinh.core.LambdaEx;
@@ -56,13 +58,17 @@ class TinyUI {
     }
 
     /** Inject fields declared in `xmlFile` and generate `initUI()` function for the macro building class. */
-    static function build(builder: ClassBuilder): Bool {
-        var uiMetas = builder.target.meta.extract(":tinyui");
-        if (uiMetas.length == 0) return false;
-        var xmlFile: String = uiMetas[0].params[0].getValue();
-        new TinyUI(xmlFile, builder).doBuild();
-        return true;
-    }
+    static function build(builder: ClassBuilder): Bool return
+        try switch builder.target.meta.extract(":tinyui") {
+            case []: false;
+            case uiMetas:
+                var xmlFile: String = uiMetas[0].params[0].getValue();
+                new TinyUI(xmlFile, builder).doBuild();
+                true;
+        } catch(e: Dynamic) {
+            println('ERROR! tinyui build failed: $e\n' + CallStack.toString(CallStack.exceptionStack()));
+            false;
+        }
 
     /** Position point to the xml file. we store this in a class var for convenient */
     var xmlPos: Position;
@@ -78,7 +84,7 @@ class TinyUI {
     }
 
     /** See build(String) */
-    function doBuild(): Void {
+    function doBuild() {
         //code for initUI() method
         var code = processNode(xml, "this", Context.getLocalType());
         
@@ -278,7 +284,7 @@ class TinyUI {
             childVarName = node.get("var");
             var baseType = tpe.baseType();
             if (baseType == null) {
-                Context.error('Can not find type $className', xmlPos);
+                throw 'Can not find type $className';
             }
             builder.addMember({
                 pos    : xmlPos,
@@ -552,7 +558,7 @@ class TinyUI {
             var dummy : Expr = try {
                 Context.parse('function ($args) { $code }', xmlPos);
             } catch (e: Dynamic) {
-                Context.error('There are some error when parse the code generated from xml.\nError: $e\nCode:\n$code', xmlPos);
+                neko.Lib.rethrow('There are some error when parse the code generated from xml.\nError: $e\nCode:\n$code');
             }
 
             //extract function

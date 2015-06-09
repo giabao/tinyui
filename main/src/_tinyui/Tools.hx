@@ -1,6 +1,5 @@
 package _tinyui;
 
-import haxe.macro.Context;
 import haxe.macro.Type;
 import sys.io.File;
 import haxe.macro.Type.BaseType;
@@ -77,13 +76,12 @@ class XmlEx {
         return ret;
     }
 
-    public static function parseXml(xmlFile: String): Xml {
+    public static function parseXml(xmlFile: String): Xml
         return try {
              Xml.parse(File.getContent(xmlFile)).firstElement();
         } catch(e: Dynamic) {
-            Context.fatalError('Can NOT parse $xmlFile, $e', Context.currentPos());
+            neko.Lib.rethrow('Can NOT parse $xmlFile, $e');
         }
-    }
 
     public static inline function hasElemNamed(xml: Xml, n: String): Bool {
         return xml.elementsNamed(n).hasNext();
