@@ -113,9 +113,9 @@ class TinyUI {
         for (attr in node.attributes()) {
             switch(attr) {
                 //"new" attribute is processed in `processNode` method.
-                //"var", "var.field" attribute is processed in `processNode` method.
+                //"var", "var.local" attribute is processed in `processNode` method.
                 //"function" attribute of root node is processed in `addInitCode` method.
-                case "new" | "var" | "var.field" | "function":
+                case "new" | "var" | "var.local" | "function":
                     continue;
                 case "class":
                     var styleXml = Styles.getStyleXml(this.xml, node);
@@ -155,9 +155,9 @@ class TinyUI {
         //workaround because we can't findField of the building class
         //can not compare: tpe == Context.getLocalType()
         if (field == null && Context.getLocalType().tpeEquals(tpe)) {
-            //1. check if name is declared in .xml ui file by attribute "var.field"
+            //1. check if name is declared in .xml ui file by attribute "var"
             var node = this.xml.elements()
-                .find(function(child) return child.get("var.field") == name);
+                .find(function(child) return child.get("var") == name);
             if (node != null) {
                 var tpeName = node.nodeName.startsWith("var.") ?
                     node.nodeName.substr(4) : node.nodeName; //"var.".length == 4
@@ -273,9 +273,9 @@ class TinyUI {
         var tpe = Context.getType(className);
         var newExpr = getNewExpr(node, tpe);
         //check if should we declare an class instance var field for this xml node
-        //ex: <Button var="this.myLocalVar" />
-        if (varName == "this" && node.exists("var.field")) {
-            childVarName = node.get("var.field");
+        //ex: <Button var="myLocalVar" />
+        if (varName == "this" && node.exists("var")) {
+            childVarName = node.get("var");
             var baseType = tpe.baseType();
             if (baseType == null) {
                 Context.error('Can not find type $className', xmlPos);
@@ -293,7 +293,7 @@ class TinyUI {
             childVarName = "this." + childVarName;
             code += '$childVarName = $newExpr;';
         } else {
-            childVarName = node.get("var");
+            childVarName = node.get("var.local");
             //ex: <Button var="myLocalVar" />
             //or: <Button />
             if(childVarName == null) {
@@ -410,13 +410,13 @@ class TinyUI {
       * @return code */
     function processModeFor(child: Xml, varName: String): String {
         var itemNode = xml.elements().find(
-            function (node) return varName == node.get("var") || varName == node.get("var.field")
+            function (node) return varName == node.get("var") || varName == node.get("var.local")
         );
         if (itemNode == null) {
             throw 'View Item for variable name "$varName" not found. ' +
                 'TinyUI can not parse ui mode <${child.parent.nodeName}>';
         }
-        if (itemNode.exists("var.field")) {
+        if (itemNode.exists("var")) {
             varName = "this." + varName;
         }
         var tpe = Context.getType(itemNode.nodeName);

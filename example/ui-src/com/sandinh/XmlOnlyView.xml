@@ -4,7 +4,7 @@
     <using com.sandinh.ui="BitmapTools" />
 
     <Bmp src="'img/sd.jpg'" />
-    <TextField var.field="txt">
+    <TextField var="txt">
         <this.defaultTextFormat size="20" align="CENTER" />
         <this text="'Hi TinyUI!'" />
     </TextField>

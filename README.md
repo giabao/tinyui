@@ -26,7 +26,7 @@ haxelib install tinyui
     using com.sandinh.TipTools;
     using layout.LayoutUtils;
     
-    @:build(TinyUI.build('ui/18-all.xml'))
+    @:tinyui('ui/18-all.xml')
     class UI18All extends Sprite {
         public function new() {
             super();
@@ -53,7 +53,7 @@ haxelib install tinyui
         x="foo + baz"
         simpleMethod="'message 1'">
         <!--You declare UI in a xml file, then `inject` into a haxe class by macro meta:
-            `@:build(TinyUI.build(path_to_xml_file))`
+            `@:tinyui(path_to_xml_file)`
             The injected class is call the `building class` or `view class`.
             Object of this class is called `view object` -->
     
@@ -239,12 +239,21 @@ haxelib install tinyui
     </UI>
     ```
 
-3. (optional) save generated code
+3. you can also define a class by ONLY the xml file.
+    see file [example/ui-src/com/sandinh/XmlOnlyView.xml](example/ui-src/com/sandinh/XmlOnlyView.xml)
+    
+4. (optional) save generated code
     ```xml
     <haxeflag name="--macro" value="TinyUI.saveCodeTo('ui-codegen')"/>
     ```
+    
+5. you can use the generated code (bypass the whole tinyui macro building)
+    by passing `useGeneratedCode = true` to `TinyUI.saveCodeTo` method:
+    ```xml
+    <haxeflag name="--macro" value="TinyUI.saveCodeTo('ui-codegen', null, true)"/>
+    ```
 
-4. see [example](http://tinyui.sandinh.com)
+6. see [example](http://tinyui.sandinh.com)
 
 ### Changelogs
 see [CHANGES.md](CHANGES.md)

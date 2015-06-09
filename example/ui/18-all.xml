@@ -22,7 +22,7 @@
         Syntax:
             + node name in format: `var.` + <ClassName>
             + Must have 'var' attribute -->
-    <var.TextFormat var="tmpFmt" bold="true"/>
+    <var.TextFormat var.local="tmpFmt" bold="true"/>
 
     <!--Use case 2: Create a field in view class.
         Similar to local var above.
@@ -30,7 +30,7 @@
         Syntax:
             + node name in format: `var.` + <class-name>
             + Must have 'var.field' attribute -->
-    <var.TextFormat var.field="myFmt" bold="false"/>
+    <var.TextFormat var="myFmt" bold="false"/>
 
     <!--Use case 3: Set properties or call methods of an object (maybe view object or other object)
         Syntax:
@@ -56,7 +56,7 @@
     <!--    note:
             + you can access prop/method of every object, not only the view object.
             + you can access static extension method using the same syntax-->
-    <var.Bitmap var="myBmp" x="5">
+    <var.Bitmap var.local="myBmp" x="5">
         <!--`src` is the extension method that bring to scope by:
             `using com.sandinh.ui.BitmapTools;` -->
         <this src="'img/sd.jpg'" />
@@ -71,7 +71,7 @@
         + node name is the class name of the view item
          (need be imported in the .hx building class, or the full fqdn class name - include package path)
         + you can use attribute `var` / `var.field` to declare variable for this view item. see usecase 1, 2 -->
-    <TextField var.field="myTxt" x="100" defaultTextFormat="tmpFmt" text="'my text'">
+    <TextField var="myTxt" x="100" defaultTextFormat="tmpFmt" text="'my text'">
         <!--see usecase 3.b-->
         <this.setTextFormat>
             <TextFormat font="'Tahoma'" size="13" />
@@ -82,14 +82,14 @@
     </TextField>
 
     <!--Use case 5: Nested view items-->
-    <Sprite var="mySpr" x="200">
+    <Sprite var.local="mySpr" x="200">
         <TextField text="'nested text'"/>
     </Sprite>
 
     <!--Use case 6: new expression.
         Sometime you need an expression that return the object instead of let tinyui create one.
         Syntax: use attribute `new` with value is the haxe expression -->
-    <var.Int var="padding" new="3+4" />
+    <var.Int var.local="padding" new="3+4" />
     <Sprite new="methodCreateSprite()" x="padding">
         <Bitmap new="myBmp" />
     </Sprite>
@@ -171,12 +171,12 @@
     <TextField text="'the target'" border="true" borderColor="0xFF0000"
                   tooltip="'An floating tooltip'"/>
     <!--b. Layout using advanced-layout haxelib-->
-    <Bitmap var="bmp1" src="'img/sd.jpg'" />
+    <Bitmap var.local="bmp1" src="'img/sd.jpg'" />
     <!--Note: `alignRight`, `alignBottom`, `rightOf`, `below`, `alignWith` methods
         is extension method from layout.LayoutUtils class -->
     <Bitmap bitmapData="bmp1.bitmapData"
             alignRight="" alignBottom="15" />
-    <TextField var="txt1" defaultTextFormat="tmpFmt" text="'TinyUI &amp; Layout!'"
+    <TextField var.local="txt1" defaultTextFormat="tmpFmt" text="'TinyUI &amp; Layout!'"
                width="200" height="33"
                rightOf="bmp1, padding" />
     <TextField defaultTextFormat="tmpFmt" text="'Hi Layout2!'" width="200"

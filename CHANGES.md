@@ -1,6 +1,36 @@
 ## Changelogs
 we use [Semantic Versioning](http://semver.org/)
 
+#### 6.0.0
++ break change:
+  `@:build(TinyUI.build(<xml-file>))`
+must be changed to:
+  `@:tinyui(<xml-file>)`
+
+    migration guide: regex replace from:
+`@:build\(TinyUI\.build\(([^\)]+)\)` to
+`@:tinyui($1`
+
++ feature: define a class by ONLY the xml file.
+see file [example/ui-src/com/sandinh/XmlOnlyView.xml](example/ui-src/com/sandinh/XmlOnlyView.xml)
+
++ fix error when switch configs for normal build or bypass TinyUI.build & using the generated code.
+
++ change syntax for declaring local variable & instance variable:
+    5.x: `var="<local-var>"` and `var.field="<instance-var>"`
+    6.x: `var.local="<local-var>"` and `var="<instance-var>"`
+
+    This change is because we found (in our real project) that instance variables are appeared more frequently.
+    
+    migrate guide: regex replace from (note the prefixed space)
+    ` var=(['"])` to ` var.local=$1`
+    
+    and then:
+    ` var\.field=(['"])` to ` var=$1`
+    
+    and then replace `var.local` attribute of `<in ` mode nodes back to `var` by searching:
+    `<in ([^>]*)var\.local=` then replace to `<in $1var=`
+
 #### 5.0.1
 + now you can switch configs for normal build or bypass TinyUI.build & using the generated code.
 

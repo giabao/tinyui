@@ -1,10 +1,10 @@
 <UI>
-    <var.TextFormat var="largeFmt" font="'Tahoma'" size="22" color="0xFF0000" />
+    <var.TextFormat var.local="largeFmt" font="'Tahoma'" size="22" color="0xFF0000" />
 
-    <Bitmap var="bmp1" src="'img/sd.jpg'" />
+    <Bitmap var.local="bmp1" src="'img/sd.jpg'" />
     <Bitmap bitmapData="bmp1.bitmapData"
             alignRight="" alignBottom="15" />
-    <TextField var="txt1" text="'Hi &amp; Layout!'" width="200" height="33"
+    <TextField var.local="txt1" text="'Hi &amp; Layout!'" width="200" height="33"
                setTextFormat="largeFmt"
                rightOf="bmp1, PADDING" />
     <TextField defaultTextFormat="largeFmt" text="'Hi Layout2!'" width="200"

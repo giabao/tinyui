@@ -6,7 +6,7 @@
         Ex: <Foo baz="1" /> will gen code: graphics.drawCircle(100,100,50) -->
     <Shape x="1" graphics.drawCircle="100,100,50" />
 
-    <var.TextFormat var="largeFmt" font="'Tahoma'" size="22" color="0xFF0000"/>
+    <var.TextFormat var.local="largeFmt" font="'Tahoma'" size="22" color="0xFF0000"/>
 
     <!--You can also call function using `this.` child nodes as bellow: -->
     <TextField text="'Hi TinyUI!'">

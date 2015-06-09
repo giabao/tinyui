@@ -1,10 +1,10 @@
 <UI>
-    <var.TextFormat var="fmt1" font="'Tahoma'" size="22" color="0xFFFF00" />
-    <var.TextFormat var="fmt2" font="'Tahoma'" size="12" color="0xFF0000" />
+    <var.TextFormat var.local="fmt1" font="'Tahoma'" size="22" color="0xFFFF00" />
+    <var.TextFormat var.local="fmt2" font="'Tahoma'" size="12" color="0xFF0000" />
 
-    <Bitmap var="bmp1" src="'img/sd.jpg'" />
-    <TextField var="txt1" border="true" borderColor="0xFF0000" x="bmp1.width" autoSize="TextFieldAutoSize.LEFT" />
-    <TextField var="txt2" border="true" borderColor="0xFF0000" x="bmp1.width + 200" />
+    <Bitmap var.local="bmp1" src="'img/sd.jpg'" />
+    <TextField var.local="txt1" border="true" borderColor="0xFF0000" x="bmp1.width" autoSize="TextFieldAutoSize.LEFT" />
+    <TextField var.local="txt2" border="true" borderColor="0xFF0000" x="bmp1.width + 200" />
     <case>
         <M1 default="true">
             <this x="20" />

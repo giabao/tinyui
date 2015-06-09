@@ -3,8 +3,8 @@
     <UI06ViewInstanceVar txt.selectable="false" />
 
     <!--For simple nested items, you can use the nested `ui-` nodes:-->
-    <Sprite var="spr1" x="5">
-        <TextField var="txt1" text="'nested item'" />
+    <Sprite var.local="spr1" x="5">
+        <TextField var.local="txt1" text="'nested item'" />
         <TextField text="txt1.text" y="40" />
     </Sprite>
 </UI>
