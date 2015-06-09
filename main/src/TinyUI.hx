@@ -1,78 +1,24 @@
 #if macro
 import tink.macro.ClassBuilder;
-import tink.syntaxhub.FrontendContext;
-import tink.syntaxhub.FrontendPlugin;
 import tink.SyntaxHub;
 import haxe.macro.Compiler;
 import haxe.macro.Type;
-import haxe.macro.Type.TVar;
-import haxe.macro.Type.TType;
 import haxe.macro.Printer;
 import haxe.macro.Context;
 import haxe.macro.Expr;
-import haxe.ds.StringMap;
 import sys.io.File;
 import sys.FileSystem;
-import _tinyui.Xml;
+import _tinyui.*;
 
 using Lambda;
 using com.sandinh.core.LambdaEx;
 using StringTools;
-using TinyUI.Tools;
+using _tinyui.Tools;
 using haxe.macro.Tools;
 using tink.MacroApi;
 
-private class TinyUIPlugin implements FrontendPlugin {
-    static inline var tmpCodeDir = "bin/tinyui/";
-    public static function init() {
-        Compiler.addClassPath(tmpCodeDir);
-        if (FileSystem.exists(tmpCodeDir)) {
-            Tools.delDirRecursive(tmpCodeDir);
-        }
-    }
-
-    public function new() {}
-
-    public function extensions() return ["xml"].iterator();
-
-    public function parse(file: String, ctx: FrontendContext): Void {
-        function getSaveFile(): String {
-            var saveDir = tmpCodeDir + ctx.pack.join("/");
-            if (!FileSystem.exists(saveDir)) {
-                FileSystem.createDirectory(saveDir);
-            }
-            return saveDir + "/" + ctx.name + ".hx";
-        }
-
-        var code = "package " + ctx.pack.join(".") + ";\n\n";
-
-        function addImport(node: Xml) {
-            var mode = node.nodeName;
-            for(a in node.attributes()) {
-                for(name in node.get(a).split(",")) {
-                    name = name.trim();
-                    code += '$mode $a.$name;\n';
-                }
-            }
-        }
-
-        var xml = Tools.parseXml(file);
-        xml.elementsNamed("import").iter(addImport);
-        code += "\n";
-        xml.elementsNamed("using").iter(addImport);
-
-        code += '\n@:tinyui("$file")\n';
-        code += "class " + ctx.name + " extends " + xml.nodeName + " {\n}\n";
-
-        File.saveContent(getSaveFile(), code);
-
-        ctx.getType(); //need call getType() for SyntaxHub to work
-    }
-}
-
 class TinyUI {
     static var genCodeDir: String = null;
-    static var useGeneratedCode: Bool;
     static inline var CodeGenBegin = "\n\t//++++++++++ code gen by tinyui ++++++++++//\n\t";
     static inline var CodeGenEnd = "\n\t//---------- code gen by tinyui ----------//\n";
 
@@ -94,7 +40,6 @@ class TinyUI {
     public static function saveCodeTo(genCodeDir: String,
                                       uiSrcDirs: Array<String> = null,
                                       useGeneratedCode: Bool = false): Void {
-        TinyUI.useGeneratedCode = useGeneratedCode;
         if (useGeneratedCode) {
             Compiler.addClassPath(genCodeDir);
         } else {
@@ -103,27 +48,19 @@ class TinyUI {
                 uiSrcDirs.iter(Compiler.addClassPath);
             }
 
-            if (FileSystem.exists(genCodeDir)) {
-                Tools.delDirRecursive(genCodeDir);
-            }
+            genCodeDir.delDirRecursive();
 
             TinyUIPlugin.init();
+            SyntaxHub.classLevel.whenever(build);
         }
-
-        SyntaxHub.classLevel.whenever(build);
-        SyntaxHub.frontends.whenever(new TinyUIPlugin());
     }
 
     /** Inject fields declared in `xmlFile` and generate `initUI()` function for the macro building class. */
     static function build(builder: ClassBuilder): Bool {
-        if (useGeneratedCode) return false;
-
         var uiMetas = builder.target.meta.extract(":tinyui");
         if (uiMetas.length == 0) return false;
         var xmlFile: String = uiMetas[0].params[0].getValue();
-        var tinyUI = new TinyUI();
-        tinyUI.init(xmlFile, builder);
-        tinyUI.doBuild();
+        new TinyUI(xmlFile, builder).doBuild();
         return true;
     }
 
@@ -134,11 +71,9 @@ class TinyUI {
 
     var localVarNameGen = new LocalVarNameGen();
 
-    function new(){}
-
-    function init(xmlFile: String, builder: ClassBuilder) {
+    function new(xmlFile: String, builder: ClassBuilder) {
         this.xmlPos = Context.makePosition( { min:0, max:0, file:xmlFile } );
-        this.xml = Tools.parseXml(xmlFile);
+        this.xml = xmlFile.parseXml();
         this.builder = builder;
     }
 
@@ -165,7 +100,7 @@ class TinyUI {
         var expr = node.get("new");
         expr = expr == null? ":" : expr.trim();
         return expr.charAt(0) != ':'? expr :
-            "new " + tpe.clsFqdn() + "(" + expr.substr(1) + ")";
+            "new " + tpe.fqdn() + "(" + expr.substr(1) + ")";
     }
 
     /** extract variables from xml node then convert to haxe code */
@@ -666,15 +601,15 @@ class TinyUI {
         if (genCodeDir == null) {
             return;
         }
+        var tpath: {pack : Array<String>, name : String} = Context.getLocalClass().get();
+
         //1. calculate the path of the file we need to save, and create its parent directory if not exists
         inline function prepareDestFile(): String {
-            var module = Context.getLocalModule().replace(".", "/");
-            var file = genCodeDir + module;
-            var saveDir = file.substr(0, file.lastIndexOf("/"));
+            var saveDir = genCodeDir + tpath.dirPath();
             if (!FileSystem.exists(saveDir)) {
                 FileSystem.createDirectory(saveDir);
             }
-            return file + ".hx";
+            return saveDir + "/" + TinyUIPlugin.removeGenSuffix(tpath.name) + ".hx";
         }
         var saveFile = prepareDestFile();
 
@@ -690,7 +625,12 @@ class TinyUI {
 
         //3. find index in content that we will insert the generated code
         inline function getCodeGenIdx(): Int {
-            var className = Context.getLocalClass().get().name;
+            var className = tpath.name;
+            if (TinyUIPlugin.isGenSuffix(className)) {
+                var old = className;
+                className = TinyUIPlugin.removeGenSuffix(old);
+                content = content.replace(old, className);
+            }
             var reg = new EReg(".*class\\s+" + className + "\\s+extends\\s+[^{]*{", "g");
             reg.match(content);
             var matchedPos = reg.matchedPos();
@@ -728,162 +668,8 @@ class TinyUI {
     }
 }
 
-class Tools {
-    /** this method not check path exists & isDirectory */
-    @noUsing public static function delDirRecursive(path: String) {
-        for (item in FileSystem.readDirectory(path)) {
-            var child = path + '/' + item;
-            if (FileSystem.isDirectory(child)) {
-                delDirRecursive(child);
-            } else {
-                FileSystem.deleteFile(child);
-            }
-        }
-        FileSystem.deleteDirectory(path);
-    }
-
-    public static function tpeEquals(t1: Type, t2: Type): Bool {
-        var b1 = t1.baseType(), b2 = t2.baseType();
-        if(b1 == null || b2 == null) return false;
-        return b1.name == b2.name && b1.module == b2.module && b1.pack.join('') == b2.pack.join('');
-    }
-    public static function baseType(tpe: Type): Null<BaseType> {
-        return switch(tpe) {
-            case TEnum(t, _): t.get();
-            case TInst(t, _): t.get();
-            case TType(t, _): t.get();
-            case TAbstract(t, _): t.get();
-            case _: null;
-        }
-    }
-
-    /**return the full pack + name of the Class `tpe`
-     * tpe must represent a class. see haxe.macro.TypeTools.getClass */
-    public static function clsFqdn(tpe: Type): String {
-        var cls: ClassType = tpe.getClass();
-        return cls.pack.toDotPath(cls.name);
-    }
-
-    public static function cloneXml(node: Xml, newName: String = null, excludeAttr: String = null): Xml {
-        var ret = Xml.createElement(newName == null? node.nodeName : newName);
-        for (a in node.attributes())
-            if (a != excludeAttr)
-                ret.set(a, node.get(a));
-        node.iter(function(child) ret.addChild(cloneXml(child)));
-        return ret;
-    }
-
-    public static function parseXml(xmlFile: String): Xml {
-        return try {
-             Xml.parse(File.getContent(xmlFile)).firstElement();
-        } catch(e: Dynamic) {
-            Context.fatalError('Can NOT parse $xmlFile, $e', Context.currentPos());
-        }
-    }
-
-    public static inline function hasElemNamed(xml: Xml, n: String): Bool {
-        return xml.elementsNamed(n).hasNext();
-    }
-    public static function namedElemIterable(x: Xml, n: String) return
-        [for (child in x) if (child.nodeType == Element && child.nodeName == n) child];
-}
-
 private typedef MyClassField = {
     var type : Type;
     var isVar: Bool;
-}
-
-/** map from className to an auto-inc value
- * this is used to declare local variable names */
-private class LocalVarNameGen {
-    var localVarNum = new StringMap<Int>();
-    
-    public function new() { }
-    
-    public function next(className: String): String {
-        var i = className.lastIndexOf(".");
-        //take only real class name, not fqdn
-        className = i == -1? className : className.substr(i + 1);
-
-        var i = localVarNum.get(className);
-        if (i == null) {
-            i = 0;
-        }
-        localVarNum.set(className, ++i);
-        return '__ui$className$i';
-    }
-}
-
-private class Styles {
-    static function resolveStyleNode(xml: Xml, styleId: String, isExtStyleFile: Bool = false): Xml {
-        function fromNode(x: Xml) return x.namedElemIterable(styleId);
-
-        function fromImported(classNode: Xml): Xml {
-            var extStyleFile = classNode.get("import");
-            return extStyleFile == null?
-                null : resolveStyleNode(Tools.parseXml(extStyleFile), styleId, true);
-        }
-
-        var classNodes = isExtStyleFile? [xml] : xml.namedElemIterable("class");
-
-        var matchedStyles = classNodes.flatMap(fromNode);
-        if (matchedStyles.isEmpty()) {
-            matchedStyles = classNodes.list().map(fromImported)
-                .filter(function(x) return x != null);
-        }
-        if (matchedStyles.isEmpty()) {
-            throw 'Not found style $styleId';
-        }
-        if (matchedStyles.length > 1) {
-            throw 'found multiple style $styleId';
-        }
-        return matchedStyles.first();
-    }
-
-    static function mergeStyle(xml: Xml, styleId: String, ret: Xml, instanceNode: Xml, mergeToStyle: String = null) {
-        var styleNode = resolveStyleNode(xml, styleId);
-
-        //clone attributes except "extends"
-        //also check to not re-set the existed attr
-        for(a in styleNode.attributes())
-            if (a != "extends")
-                if (ret.get(a) == null && instanceNode.get(a) == null) {
-                    ret.set(a, styleNode.get(a));
-                } else {
-                    var msg = 'att $a in style $styleId is overrided when merging style $mergeToStyle!';
-                    if (instanceNode.get(a) != null) {
-                        msg += " (the instance node redefine this attribute)";
-                    }
-                    Context.warning(msg, Context.currentPos());
-                }
-
-        //clone children
-        //also check to not re-add the existed child with same nodeName
-        for(c in styleNode.elements())
-            if (ret.hasElemNamed(c.nodeName) || instanceNode.hasElemNamed(c.nodeName)) {
-                var msg = 'child ${c.nodeName} in style $styleId is overrided when merging style $mergeToStyle!';
-                if (instanceNode.hasElemNamed(c.nodeName)) {
-                    msg += " (the instance node redefine this child node)";
-                }
-                Context.warning(msg, Context.currentPos());
-            } else {
-                ret.addChild(c.cloneXml());
-            }
-
-        var baseStyleIds = styleNode.get("extends");
-        if (baseStyleIds != null)
-            for(baseStyleId in baseStyleIds.split(","))
-                mergeStyle(xml, baseStyleId, ret, instanceNode, styleId);
-    }
-
-    public static function getStyleXml(xml: Xml, node: Xml): Xml {
-        var styleId = node.get("class");
-        if(styleId == null) {
-            throw 'node do not have `class` attribute! $node';
-        }
-        var ret = Xml.createElement("style");
-        mergeStyle(xml, styleId, ret, node);
-        return ret;
-    }
 }
 #end
