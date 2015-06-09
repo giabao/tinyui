@@ -1,6 +1,9 @@
 ## Changelogs
 we use [Semantic Versioning](http://semver.org/)
 
+#### 6.0.1
++ better error logging
+
 #### 6.0.0
 + break change:
   `@:build(TinyUI.build(<xml-file>))`
