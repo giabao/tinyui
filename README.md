@@ -244,13 +244,14 @@ haxelib install tinyui
     
 4. (optional) save generated code
     ```xml
-    <haxeflag name="--macro" value="TinyUI.saveCodeTo('ui-codegen')"/>
+    <haxeflag name="--macro" value="TinyUI.init('ui-codegen')"/>
     ```
     
 5. you can use the generated code (bypass the whole tinyui macro building)
-    by passing `useGeneratedCode = true` to `TinyUI.saveCodeTo` method:
+    by set `tinyui-use-gen-code` flag:
     ```xml
-    <haxeflag name="--macro" value="TinyUI.saveCodeTo('ui-codegen', null, true)"/>
+    <!--uncomment to bypass TinyUI.build & using the generated code-->
+    <haxeflag name="-D tinyui-use-gen-code"/>
     ```
 
 6. see [example](http://tinyui.sandinh.com)

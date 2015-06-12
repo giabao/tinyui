@@ -1,6 +1,22 @@
 ## Changelogs
 we use [Semantic Versioning](http://semver.org/)
 
+#### 7.0.0
++ Not use tink_syntaxhub to reduce compile time ~3 times
+    (in our large project, compile time is reduced from 40s to 10s)
+
++ revert syntax as in version 5.x:
+
+regex replace from:
+`@:tinyui\((['"][^)]+)`
+to:
+`@:build(TinyUI.build($1)`
+
++ rename & change `TinyUI.saveCodeTo` to `TinyUI.init` for better meaning.
+
++ use `-D tinyui-use-gen-code` flag instead of argument `useGeneratedCode` of `TinyUI.saveCodeTo` method
+    see document of `TinyUI.init` for more detail.
+
 #### 6.0.1
 + better error logging
 

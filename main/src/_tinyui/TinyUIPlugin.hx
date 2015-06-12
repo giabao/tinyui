@@ -21,6 +21,7 @@ class TinyUIPlugin {
       * 2. return an alias to the impl class. */
     static inline var prebuildCodeDir = "bin/tinyui/";
     static inline var GenSuffix = "_ui_gen";
+    static var genTypePrefix: String;
 
     public static inline function isGenSuffix(s: String) return s.endsWith(GenSuffix);
     public static function removeGenSuffix(s: String) {
@@ -28,14 +29,17 @@ class TinyUIPlugin {
     }
 
     /* delete the prebuildCodeDir dir and register Context.onTypeNotFound */
-    public static function init() {
+    public static function init(genTypePrefix: String) {
         Compiler.addClassPath(prebuildCodeDir);
         prebuildCodeDir.delDirRecursive();
         Context.onTypeNotFound(onTypeNotFound);
+        TinyUIPlugin.genTypePrefix = genTypePrefix;
     }
 
     /** @param name the not-found-type, ex "foo.Bar" */
     static function onTypeNotFound(name: String): TypeDefinition {
+        if (! name.startsWith(genTypePrefix)) return null;
+
         var ctx = name.asTypePath();
         //Note: if we define the impl class named "foo.__impl.Bar" as in tink.syntaxhub.FrontendContext:
         //var actual = {name: ctx.name, pack: ctx.pack.concat(['__impl'])};
@@ -87,7 +91,7 @@ class TinyUIPlugin {
         code += "\n";
         xml.elementsNamed("using").iter(addImport);
 
-        code += '\n@:tinyui("$xmlFile")\n';
+        code += '\n@:build(TinyUI.build("$xmlFile"))\n';
         code += "class " + ctx.name + " extends " + xml.nodeName + " {\n}\n";
 
         File.saveContent(hxFile(), code);

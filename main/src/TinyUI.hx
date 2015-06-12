@@ -1,6 +1,5 @@
 #if macro
 import tink.macro.ClassBuilder;
-import tink.SyntaxHub;
 import haxe.macro.Compiler;
 import haxe.macro.Type;
 import haxe.macro.Printer;
@@ -28,23 +27,28 @@ class TinyUI {
       * @param genCodeDir - the directory to save generated code to.
       * @param uiSrcDirs - array of source dir contains only .hx view files
       *     need to be built using @:build(TinyUI.build(<the-xml-file>)).
-      * @param useGeneratedCode -
-      *     = false (default) for normal @build. uiSrcDirs will be add to class path (Compiler.addClassPath)
-      *     = true to bypass TinyUI.build function.
+      * @param genTypePrefix TinyUI will gen haxe type from xml file only if type (include package name)
+      *     is prefixed with this argument.
+      *     You should use this feature in large projects to reduce the compile time.
+      *     In our project, set genTypePrefix="com.sandinh.ui" reduce compile time from 30s to 10s!
+      *
+      * config tinyui_use_gen_code -
+      *     unset (default) for normal @build. uiSrcDirs will be add to class path (Compiler.addClassPath)
+      *     set (by add: -D tinyui-use-gen-code) to bypass TinyUI.build function.
       *         We will use the generated code when compiling: Compiler.addClassPath(genCodeDir)
       *
       * usage, ex with openfl: add to using openfl project.xml file:
       * ```xml
-      * <!--switch the following configs for normal build or bypass TinyUI.build & using the generated code-->
-      * <haxeflag name="--macro" value="TinyUI.saveCodeTo('ui-codegen', ['ui-src'])"/>
-      * <!--<haxeflag name="&#45;&#45;macro" value="TinyUI.saveCodeTo('ui-codegen', ['ui-src'], true)"/>-->
+      * <!--uncomment to bypass TinyUI.build & using the generated code-->
+      * <haxeflag name="-D tinyui-use-gen-code"/>
+      * <haxeflag name="--macro" value="TinyUI.init('ui-codegen', ['ui-src'], 'com.sandinh')"/>
       * ``` */
-    public static function saveCodeTo(genCodeDir: String,
-                                      uiSrcDirs: Array<String> = null,
-                                      useGeneratedCode: Bool = false): Void {
-        if (useGeneratedCode) {
+    public static function init(genCodeDir: String,
+                                uiSrcDirs: Array<String> = null,
+                                genTypePrefix: String = ""): Void {
+        #if tinyui_use_gen_code
             Compiler.addClassPath(genCodeDir);
-        } else {
+        #else
             TinyUI.genCodeDir = genCodeDir.endsWith("/")? genCodeDir : genCodeDir + "/";
             if (uiSrcDirs != null) {
                 uiSrcDirs.iter(Compiler.addClassPath);
@@ -52,23 +56,26 @@ class TinyUI {
 
             genCodeDir.delDirRecursive();
 
-            TinyUIPlugin.init();
-            SyntaxHub.classLevel.whenever(build);
-        }
+            TinyUIPlugin.init(genTypePrefix);
+        #end
     }
 
-    /** Inject fields declared in `xmlFile` and generate `initUI()` function for the macro building class. */
-    static function build(builder: ClassBuilder): Bool return
-        try switch builder.target.meta.extract(":tinyui") {
-            case []: false;
-            case uiMetas:
-                var xmlFile: String = uiMetas[0].params[0].getValue();
+    static function build(xmlFile: String): Array<Field> {
+        #if tinyui_use_gen_code
+        return null;
+        #else
+        return try switch Context.getLocalType() {
+            case TInst(_.get() => c, _):
+                var builder = new ClassBuilder(c);
                 new TinyUI(xmlFile, builder).doBuild();
-                true;
+                builder.export(builder.target.meta.has(':explain'));
+            default: null;
         } catch(e: Dynamic) {
             println('ERROR! tinyui build failed: $e\n' + CallStack.toString(CallStack.exceptionStack()));
-            false;
+            null;
         }
+        #end
+    }
 
     /** Position point to the xml file. we store this in a class var for convenient */
     var xmlPos: Position;
@@ -621,7 +628,7 @@ class TinyUI {
 
         //2. Get content of building file. We will save this content and the generated fields to the saveFile
         inline function getContent(): String {
-            //genCodeDir is delete in method `saveCodeTo`.
+            //genCodeDir is delete in method `init`.
             //saveFile exist here when it contain multiple building class
             var file = FileSystem.exists(saveFile)?
                 saveFile : builder.target.pos.getInfos().file;

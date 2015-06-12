@@ -59,17 +59,6 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="haxelib|C:/HaxeToolkit/haxe/lib/openfl/3,0,8">
-        <CLASSES>
-          <root url="file://$MODULE_DIR$/../../../openfl/3,0,8" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="file://$MODULE_DIR$/../../../openfl/3,0,8" />
-        </SOURCES>
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
       <library name="haxelib|C:/HaxeToolkit/haxe/lib/tink_macro/0,6,4/src">
         <CLASSES>
           <root url="file://$MODULE_DIR$/../../../tink_macro/0,6,4/src" />
@@ -92,24 +81,13 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="haxelib|C:/HaxeToolkit/haxe/lib/tink_syntaxhub/0,3,0/src">
+      <library name="haxelib|C:/HaxeToolkit/haxe/lib/openfl/3,1,0">
         <CLASSES>
-          <root url="file://$MODULE_DIR$/../../../tink_syntaxhub/0,3,0/src" />
+          <root url="file://$MODULE_DIR$/../../../openfl/3,1,0" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="file://$MODULE_DIR$/../../../tink_syntaxhub/0,3,0/src" />
-        </SOURCES>
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="haxelib|C:/HaxeToolkit/haxe/lib/tink_priority/0,1,2/src">
-        <CLASSES>
-          <root url="file://$MODULE_DIR$/../../../tink_priority/0,1,2/src" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="file://$MODULE_DIR$/../../../tink_priority/0,1,2/src" />
+          <root url="file://$MODULE_DIR$/../../../openfl/3,1,0" />
         </SOURCES>
       </library>
     </orderEntry>
