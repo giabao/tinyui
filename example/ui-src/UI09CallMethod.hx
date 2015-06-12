@@ -4,7 +4,7 @@ import openfl.text.TextFormat;
 import openfl.text.TextFormatAlign;
 import openfl.display.Shape;
 
-@:tinyui('ui/09-call-method.xml')
+@:build(TinyUI.build('ui/09-call-method.xml'))
 class UI09CallMethod extends Sprite {
     public function new() {
         super();

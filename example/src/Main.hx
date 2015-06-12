@@ -32,7 +32,9 @@ class Main extends Sprite {
         var xml = _tinyui.Xml.parse('<UI fun.=""><addchild foo:=""/></UI>');
         trace(xml);
 //        addChild(new UI17Styles());
-        addChild(new XmlOnlyView());
+        var view = new XmlOnlyView();
+        addChild(view);
+        trace(view.txt.x);
     }
 
     function ex1() {

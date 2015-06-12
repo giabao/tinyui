@@ -2,7 +2,7 @@ import openfl.display.Sprite;
 import openfl.display.Bitmap;
 import openfl.Assets;
 
-@:tinyui('ui/10-new-expression.xml')
+@:build(TinyUI.build('ui/10-new-expression.xml'))
 class UI10NewExpression extends Sprite {
 	//++++++++++ code gen by tinyui ++++++++++//
 	public function initUI() {

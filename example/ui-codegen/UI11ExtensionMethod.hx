@@ -3,7 +3,7 @@ import openfl.display.Bitmap;
 
 using com.sandinh.ui.BitmapTools;
 
-@:tinyui('ui/11-extension-method.xml')
+@:build(TinyUI.build('ui/11-extension-method.xml'))
 class UI11ExtensionMethod extends Sprite {
 	//++++++++++ code gen by tinyui ++++++++++//
 	public function initUI() {

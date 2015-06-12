@@ -9,7 +9,7 @@ using com.sandinh.ui.BitmapTools;
 using com.sandinh.TipTools;
 using layout.LayoutUtils;
 
-@:tinyui('ui/18-all.xml')
+@:build(TinyUI.build('ui/18-all.xml'))
 class UI18All extends Sprite {
 	//++++++++++ code gen by tinyui ++++++++++//
 	public var myFmt : openfl.text.TextFormat;

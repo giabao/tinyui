@@ -1,7 +1,7 @@
 import openfl.text.TextField;
 import openfl.display.Sprite;
 
-@:tinyui('ui/17-styles.xml')
+@:build(TinyUI.build('ui/17-styles.xml'))
 class UI17Styles extends Sprite {
 	//++++++++++ code gen by tinyui ++++++++++//
 	public function initUI() {

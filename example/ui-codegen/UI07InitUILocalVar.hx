@@ -2,7 +2,7 @@ import openfl.display.Sprite;
 import openfl.text.TextField;
 import openfl.text.TextFormat;
 
-@:tinyui('ui/07-initUI-local-var.xml')
+@:build(TinyUI.build('ui/07-initUI-local-var.xml'))
 class UI07InitUILocalVar extends Sprite {
 	//++++++++++ code gen by tinyui ++++++++++//
 	public var txt2 : openfl.text.TextField;

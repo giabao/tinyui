@@ -7,7 +7,7 @@ import openfl.text.TextFormatAlign.*;
 
 using com.sandinh.ui.BitmapTools;
 
-@:tinyui("ui-src/com/sandinh/XmlOnlyView.xml")
+@:build(TinyUI.build("ui-src/com/sandinh/XmlOnlyView.xml"))
 class XmlOnlyView extends Sprite {
 	//++++++++++ code gen by tinyui ++++++++++//
 	public function new():Void {

@@ -8,7 +8,7 @@ import layout.Direction;
 using layout.LayoutUtils;
 using com.sandinh.ui.BitmapTools;
 
-@:tinyui('ui/14-layout.xml')
+@:build(TinyUI.build('ui/14-layout.xml'))
 class UI14Layout extends Sprite {
 	//++++++++++ code gen by tinyui ++++++++++//
 	public function initUI() {

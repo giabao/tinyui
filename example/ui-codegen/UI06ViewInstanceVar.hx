@@ -2,7 +2,7 @@ import openfl.display.Sprite;
 import openfl.text.TextField;
 import openfl.text.TextFormat;
 
-@:tinyui('ui/06-view-instance-var.xml')
+@:build(TinyUI.build('ui/06-view-instance-var.xml'))
 class UI06ViewInstanceVar extends Sprite {
 	//++++++++++ code gen by tinyui ++++++++++//
 	public var myFmt : openfl.text.TextFormat;
