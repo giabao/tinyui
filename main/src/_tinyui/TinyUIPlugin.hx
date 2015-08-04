@@ -1,5 +1,7 @@
 package _tinyui;
 
+import haxe.CallStack;
+import neko.Lib.println;
 import sys.io.File;
 import sys.FileSystem;
 import haxe.macro.Context;
@@ -37,7 +39,7 @@ class TinyUIPlugin {
     }
 
     /** @param name the not-found-type, ex "foo.Bar" */
-    static function onTypeNotFound(name: String): TypeDefinition {
+    static function onTypeNotFound(name: String): TypeDefinition try {
         if (! name.startsWith(genTypePrefix)) return null;
 
         var ctx = name.asTypePath();
@@ -62,6 +64,9 @@ class TinyUIPlugin {
             }
         }
 
+        return null;
+    } catch(e: Dynamic) {
+        println('ERROR! tinyui build failed: $e\n' + CallStack.toString(CallStack.exceptionStack()));
         return null;
     }
 
@@ -91,7 +96,7 @@ class TinyUIPlugin {
         code += "\n";
         xml.elementsNamed("using").iter(addImport);
 
-        code += '\n@:build(TinyUI.build("$xmlFile"))\n';
+        code += "\n@:build(TinyUI.build('" + xmlFile + "'))\n";
         code += "class " + ctx.name + " extends " + xml.nodeName + " {\n}\n";
 
         File.saveContent(hxFile(), code);

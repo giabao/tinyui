@@ -46,35 +46,36 @@ class TinyUI {
     public static function init(genCodeDir: String,
                                 uiSrcDirs: Array<String> = null,
                                 genTypePrefix: String = ""): Void {
-        #if tinyui_use_gen_code
-            Compiler.addClassPath(genCodeDir);
-        #else
-            TinyUI.genCodeDir = genCodeDir.endsWith("/")? genCodeDir : genCodeDir + "/";
-            if (uiSrcDirs != null) {
-                uiSrcDirs.iter(Compiler.addClassPath);
-            }
+#if tinyui_use_gen_code
+        Compiler.addClassPath(genCodeDir);
+#else
+        TinyUI.genCodeDir = genCodeDir.endsWith("/")? genCodeDir : genCodeDir + "/";
+        if (uiSrcDirs != null) {
+            uiSrcDirs.iter(Compiler.addClassPath);
+        }
 
-            genCodeDir.delDirRecursive();
+        genCodeDir.delDirRecursive();
 
-            TinyUIPlugin.init(genTypePrefix);
-        #end
+        TinyUIPlugin.init(genTypePrefix);
+#end
     }
 
     static function build(xmlFile: String): Array<Field> {
-        #if tinyui_use_gen_code
+#if tinyui_use_gen_code
         return null;
-        #else
+#else
         return try switch Context.getLocalType() {
+            case null: null;
             case TInst(_.get() => c, _):
                 var builder = new ClassBuilder(c);
                 new TinyUI(xmlFile, builder).doBuild();
-                builder.export(builder.target.meta.has(':explain'));
+                builder.export(builder.target.meta.has(":explain"));
             default: null;
         } catch(e: Dynamic) {
             println('ERROR! tinyui build failed: $e\n' + CallStack.toString(CallStack.exceptionStack()));
             null;
         }
-        #end
+#end
     }
 
     /** Position point to the xml file. we store this in a class var for convenient */
@@ -94,11 +95,11 @@ class TinyUI {
     function doBuild() {
         //code for initUI() method
         var code = processNode(xml, "this", Context.getLocalType());
-        
+
         code += genUIModes();
 
         addInitCode(code);
-        
+
         saveCode();
     }
     
@@ -545,6 +546,7 @@ class TinyUI {
         //get initUI function name and arguments
         var fnName = xml.get("function");
         var args = "";
+        if (fnName != "new") {
         if (fnName == null || fnName.trim() == "") {
             fnName = "initUI"; //default is "initUI()"
         } else {
@@ -559,6 +561,7 @@ class TinyUI {
                 fnName = fnName.substr(0, i).rtrim();
             }
         }
+        }
 
         //generate dummy function to extract expressions
         function getDummyFn(): Function {
@@ -567,26 +570,34 @@ class TinyUI {
             } catch (e: Dynamic) {
                 neko.Lib.rethrow('There are some error when parse the code generated from xml.\nError: $e\nCode:\n$code');
             }
+            neko.Lib.println("1");
 
             //extract function
             return switch(dummy.expr){
                 case EFunction(_,f) : f;
-                default: null;
+                default:
+                    null;
             }
         }
 
         if (fnName == "new") {
             var fun = getDummyFn();
+            neko.Lib.println("2");
+
             var ctor = builder.getConstructor();
+            neko.Lib.println("3");
             for (a in fun.args) {
                 ctor.addArg(a.name, a.type, a.value, a.opt);
             }
+            neko.Lib.println("4");
             switch fun.expr {
                 case {expr: EBlock(exprs)}:
                     for(e in exprs) ctor.addStatement(e);
                 case e:
                     ctor.addStatement(e);
             }
+            neko.Lib.println("5");
+
         } else {
             if (builder.hasSuperField(fnName)) {
                 var argNames = args.split(",")
